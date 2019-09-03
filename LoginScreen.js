@@ -13,13 +13,13 @@ import {
   } from 'react-native';
   var PushNotification = require("react-native-push-notification");
   
-  import {
-    Header,
-    LearnMoreLinks,
-    Colors,
-    DebugInstructions,
-    ReloadInstructions,
-  } from 'react-native/Libraries/NewAppScreen';
+  // import {
+  //   Header,
+  //   LearnMoreLinks,
+  //   Colors,
+  //   DebugInstructions,
+  //   ReloadInstructions,
+  // } from 'react-native/Libraries/NewAppScreen';
 
 class LoginScreen extends React.Component {
     constructor(props) {
@@ -95,10 +95,10 @@ export default LoginScreen;
 
 const styles = StyleSheet.create({
     scrollView: {
-      backgroundColor: Colors.white,
+      backgroundColor: '#FFF',
     },
     body: {
-      backgroundColor: Colors.white,
+      backgroundColor: '#FFF',
       textAlignVertical: 'center'
     },
     sectionContainer: {
@@ -115,13 +115,13 @@ const styles = StyleSheet.create({
     sectionTitle: {
       fontSize: 24,
       fontWeight: '600',
-      color: Colors.black,
+      color: '#000',
     },
     sectionDescription: {
       marginTop: 8,
       fontSize: 18,
       fontWeight: '400',
-      color: Colors.dark,
+      color: '#444',
     },
     userInput: {
       height: 40, 
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
       fontWeight: '700',
     },
     footer: {
-      color: Colors.dark,
+      color: '#444',
       fontSize: 12,
       fontWeight: '600',
       padding: 4,

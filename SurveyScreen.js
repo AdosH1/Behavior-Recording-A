@@ -12,18 +12,50 @@ import {
     //PushNotificationIOS
   } from 'react-native';
   var PushNotification = require("react-native-push-notification");
+  import { CheckBox, } from 'react-native-elements'
   
-  import {
-    Header,
-    LearnMoreLinks,
-    Colors,
-    DebugInstructions,
-    ReloadInstructions,
-  } from 'react-native/Libraries/NewAppScreen';
+  // import {
+  //   Header,
+  //   LearnMoreLinks,
+  //   Colors,
+  //   DebugInstructions,
+  //   ReloadInstructions,
+  // } from 'react-native/Libraries/NewAppScreen';
 
 class SurveyScreen extends React.Component {
     constructor(props) {
-    super(props);
+      super(props);
+
+      this.state = {
+        showCheckbox: true,
+        showTextbox: false,
+        showRadioButton: false,
+      }
+      // var Checkboxes = React.createClass({
+      //   getInitialState() {
+      //     return { showResults : false }
+      //   },
+        
+      //   render() {
+      //     <View style={styles.sectionContainer}>
+      //       <Text style={styles.sectionTitle}>What did you eat for lunch?</Text>
+      //       <CheckBox center
+      //         title='Hamburgers'
+      //         // checked={this.state.checked}
+      //       />
+      //       <CheckBox center
+      //         title='Fries'
+      //         //checked={this.state.checked}
+      //       />
+      //       <CheckBox center
+      //         title='Salad'
+      //         //checked={this.state.checked}
+      //       />
+      //       <Button style={{height: 40, marginTop: 5,}} onPress={() => { alert('You tapped the button!'); }} title="Submit" />
+      //     </View>
+      //   }
+
+      // });
 
       PushNotification.configure({
         // (optional) Called when Token is generated (iOS and Android)
@@ -48,6 +80,73 @@ class SurveyScreen extends React.Component {
         requestPermissions: true
       });
     }
+
+    showData() {
+      if (this.state.showCheckbox) {
+        return (
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>What did you eat for lunch?</Text>
+            <CheckBox center
+              title='Hamburgers'
+              checked={this.state.checked}
+            />
+            <CheckBox center
+              title='Fries'
+              checked={this.state.checked}
+            />
+            <CheckBox center
+              title='Salad'
+              checked={this.state.checked}
+            />
+            <Button style={{height: 40, marginTop: 5,}} onPress={() => { alert('You tapped the button!'); }} title="Submit" />
+          </View>
+        )
+      }
+      else if (this.state.showTextbox) {
+        return (
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>What did you eat for lunch?</Text>
+            <TextInput defaultValue="Tell me!"/>
+            <Button style={{height: 40, marginTop: 5,}} onPress={() => { alert('You tapped the button!'); }} title="Submit" />
+          </View>
+        )
+      }
+      else if (this.state.showRadioButton) {
+        return (
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>What did you eat for lunch?</Text>
+            <CheckBox
+              center
+              title='Chicken Treat'
+              checkedIcon='dot-circle-o'
+              uncheckedIcon='circle-o'
+              checked={this.state.checked}
+            />
+            <CheckBox
+              center
+              title='KFC'
+              checkedIcon='dot-circle-o'
+              uncheckedIcon='circle-o'
+              checked={this.state.checked}
+            />
+            <CheckBox
+              center
+              title='Hungry Jacks'
+              checkedIcon='dot-circle-o'
+              uncheckedIcon='circle-o'
+              checked={this.state.checked}
+            />
+            <Button style={{height: 40, marginTop: 5,}} onPress={() => { alert('You tapped the button!'); }} title="Submit" />
+          </View>
+        )
+      }
+      else {
+        return (
+          <View />
+        )
+      }
+
+    }
   
     render() {
       return (
@@ -64,19 +163,10 @@ class SurveyScreen extends React.Component {
     
                   <View style={{ height: 50, }}></View>
                   <View style={styles.body}>
-                    <View style={styles.sectionContainer}>
-    
-                      <Text style={styles.sectionTitle}>YOU DID IT YEAH</Text>
-                      <Text>Username: </Text>
-                      <TextInput
-                        style={styles.userInput}
-                        placeholder="Enter username here."/>
-                      <Text>Password: </Text>
-                      <TextInput
-                        style={styles.userInput}
-                        placeholder="Enter password here."/>
-                      <Button style={{height: 40, marginTop: 5,}} onPress={() => { alert('You tapped the button!'); }} title="Login" />
-                    </View>
+                    {this.showData()}
+                    <Button style={{height: 40, marginTop: 5,}} onPress={() => { this.setState({showCheckbox: true, showTextbox: false, showRadioButton: false}) }} title="Show Checkbox" />
+                    <Button style={{height: 40, marginTop: 5,}} onPress={() => { this.setState({showCheckbox: false, showTextbox: true, showRadioButton: false}) }} title="Show Textbox" />
+                    <Button style={{height: 40, marginTop: 5,}} onPress={() => { this.setState({showCheckbox: false, showTextbox: false, showRadioButton: true}) }} title="Show Radiobutton" />
                   </View>
     
               </View>
@@ -91,10 +181,10 @@ export default SurveyScreen;
 
 const styles = StyleSheet.create({
     scrollView: {
-      backgroundColor: Colors.white,
+      backgroundColor: '#FFF',
     },
     body: {
-      backgroundColor: Colors.white,
+      backgroundColor: '#FFF',
       textAlignVertical: 'center'
     },
     sectionContainer: {
@@ -111,13 +201,13 @@ const styles = StyleSheet.create({
     sectionTitle: {
       fontSize: 24,
       fontWeight: '600',
-      color: Colors.black,
+      color: '#000',
     },
     sectionDescription: {
       marginTop: 8,
       fontSize: 18,
       fontWeight: '400',
-      color: Colors.dark,
+      color: '#444',
     },
     userInput: {
       height: 40, 
@@ -129,7 +219,7 @@ const styles = StyleSheet.create({
       fontWeight: '700',
     },
     footer: {
-      color: Colors.dark,
+      color: '#444',
       fontSize: 12,
       fontWeight: '600',
       padding: 4,
