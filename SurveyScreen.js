@@ -30,32 +30,24 @@ class SurveyScreen extends React.Component {
         showCheckbox: true,
         showTextbox: false,
         showRadioButton: false,
+        //ViewArray: [(<Text>"Hello"</Text>), "My", "Name", "Is", "Darude"],
+        ViewArray: [],
+        SurveyQuestions: {
+          SurveyQuestion: {
+            Question: "How do you feel right now?",
+            Type: "checkbox",
+            Answers: {
+              Answer1: "Very Good",
+              Answer1: "Good",
+              Answer2: "Okay",
+              Answer3: "Bad",
+              Answer1: "Very Bad",
+            }
+          }
+        }
       }
-      // var Checkboxes = React.createClass({
-      //   getInitialState() {
-      //     return { showResults : false }
-      //   },
-        
-      //   render() {
-      //     <View style={styles.sectionContainer}>
-      //       <Text style={styles.sectionTitle}>What did you eat for lunch?</Text>
-      //       <CheckBox center
-      //         title='Hamburgers'
-      //         // checked={this.state.checked}
-      //       />
-      //       <CheckBox center
-      //         title='Fries'
-      //         //checked={this.state.checked}
-      //       />
-      //       <CheckBox center
-      //         title='Salad'
-      //         //checked={this.state.checked}
-      //       />
-      //       <Button style={{height: 40, marginTop: 5,}} onPress={() => { alert('You tapped the button!'); }} title="Submit" />
-      //     </View>
-      //   }
 
-      // });
+
 
       PushNotification.configure({
         // (optional) Called when Token is generated (iOS and Android)
@@ -79,6 +71,38 @@ class SurveyScreen extends React.Component {
          */
         requestPermissions: true
       });
+    }
+
+    createCheckboxView(){
+      this.state.ViewArray = [];
+
+      var question = {
+        Question: "What did you each for lunch?"
+      };
+
+      var answers = {
+        Answer1: "Hamburgers",
+        Answer2: "Salad",
+        Answer3: "Tacos"
+      }
+
+      for (var key in answers) {
+        var option = answers[key];
+
+        this.state.ViewArray.push(<CheckBox center title={option} checked={this.state.checked} />)
+      }
+    }
+
+    createTextInputView(){
+      this.state.ViewArray = [];
+
+      var question = {
+        Question: "How do you feel right now??"
+      };
+
+
+      this.state.ViewArray.push(<TextInput defaultValue="Tell me!"/>)
+      
     }
 
     showData() {
@@ -163,9 +187,10 @@ class SurveyScreen extends React.Component {
     
                   <View style={{ height: 50, }}></View>
                   <View style={styles.body}>
-                    {this.showData()}
-                    <Button style={{height: 40, marginTop: 5,}} onPress={() => { this.setState({showCheckbox: true, showTextbox: false, showRadioButton: false}) }} title="Show Checkbox" />
-                    <Button style={{height: 40, marginTop: 5,}} onPress={() => { this.setState({showCheckbox: false, showTextbox: true, showRadioButton: false}) }} title="Show Textbox" />
+                    {/* {this.showData()} */}
+                    {this.state.ViewArray.map(info => info)}
+                    <Button style={{height: 40, marginTop: 5,}} onPress={() => { this.setState({showCheckbox: true, showTextbox: false, showRadioButton: false}); this.createCheckboxView(); }} title="Show Checkbox" />
+                    <Button style={{height: 40, marginTop: 5,}} onPress={() => { this.setState({showCheckbox: false, showTextbox: true, showRadioButton: false}); this.createTextInputView(); }} title="Show Textbox" />
                     <Button style={{height: 40, marginTop: 5,}} onPress={() => { this.setState({showCheckbox: false, showTextbox: false, showRadioButton: true}) }} title="Show Radiobutton" />
                   </View>
     
