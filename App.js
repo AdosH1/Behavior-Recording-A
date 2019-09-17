@@ -1,34 +1,15 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
-
-import React, {Fragment} from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-  Image,
-  TextInput,
-  Button,
-  //PushNotificationIOS
-} from 'react-native';
 var PushNotification = require("react-native-push-notification");
 
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import LoginScreen from './LoginScreen';
 import SurveyScreen from './SurveyScreen';
+import ThankyouScreen from './ThankyouScreen'
 
 const MainNavigator = createStackNavigator({
   Login:  LoginScreen,
   Survey:  SurveyScreen,
+  Thankyou:  ThankyouScreen,
 });
 
 const App = createAppContainer(MainNavigator);
