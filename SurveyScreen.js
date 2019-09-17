@@ -23,6 +23,7 @@ class SurveyScreen extends React.Component {
       {
         ViewArray: [],
         checked: false,
+        CurrentQuestionIndex: 0,
         SurveyQuestions: 
           [
             {
@@ -57,8 +58,8 @@ class SurveyScreen extends React.Component {
         CheckboxId: 1, 
       };
       
-        this.loadQuestions();
-
+        //this.loadQuestions();
+        this.loadNextQuestion();
 
       PushNotification.configure({
         // (optional) Called when Token is generated (iOS and Android)
@@ -102,67 +103,66 @@ class SurveyScreen extends React.Component {
       this.forceUpdate();
     }
 
-    loadQuestions() {
+    loadNextQuestion() {
       this.state.ViewArray = []
 
-      for (let surveyQuestion in this.state.SurveyQuestions) 
-      {
-        let currentQuestion = this.state.SurveyQuestions[surveyQuestion];
+      let currentQuestion = this.state.SurveyQuestions[this.state.CurrentQuestionIndex];
 
-        this.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
-        let surveyAnswers = currentQuestion.Answers;
+      this.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
+      let surveyAnswers = currentQuestion.Answers;
 
-    
+      if (currentQuestion.Type === "checkbox") { 
+        // Create answer entry
+        this.state.Answers[currentQuestion.Question] = "";//[];
 
-        if (currentQuestion.Type === "checkbox") { 
+        for (var key in surveyAnswers) {
+          let option = surveyAnswers[key];
+
+          let cb = {id: this.state.CheckboxId, title: option, checked: false}
+          this.state.Checkboxes.push(cb);
+          
+          this.state.ViewArray.push(
+            <View style={{ flexDirection: 'row', marginVertical: 5, marginHorizontal: 20 }}>
+            <CheckBox value={cb.checked} key={cb.id} title={cb.title} onTouchStart={(event) => {cb.checked = !cb.checked; this.state.Answers[currentQuestion.Question] = option}} />
+            {/* <CheckBox key={cb.id} title={cb.title} checked={cb.checked} value={cb.checked} onChange={() => this.toggleCheckbox(cb.id)} /> */}
+            <Text style={{marginTop: 5}}>{option}</Text>
+            </View>
+          );
+
+          this.state.CheckboxId++;
+        }
+      }
+      else if (currentQuestion.Type === "button") {
           // Create answer entry
-          this.state.Answers[currentQuestion.Question] = "";//[];
+        this.state.Answers[currentQuestion.Question] = "";
 
-          for (var key in surveyAnswers) {
-            let option = surveyAnswers[key];
-
-            let cb = {id: this.state.CheckboxId, title: option, checked: false}
-            this.state.Checkboxes.push(cb);
-            
-            this.state.ViewArray.push(
-              <View style={{ flexDirection: 'row', marginVertical: 5, marginHorizontal: 20 }}>
-              <CheckBox value={cb.checked} key={cb.id} title={cb.title} onTouchStart={(event) => {cb.checked = !cb.checked; this.state.Answers[currentQuestion.Question] = option}} />
-              {/* <CheckBox key={cb.id} title={cb.title} checked={cb.checked} value={cb.checked} onChange={() => this.toggleCheckbox(cb.id)} /> */}
-              <Text style={{marginTop: 5}}>{option}</Text>
-              </View>
+        for (let key in surveyAnswers) {
+          let option = surveyAnswers[key];
+  
+          this.state.ViewArray.push(
+            <Button large title={option} buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => {this.state.Answers[currentQuestion.Question] = option; }} />
             );
 
-            this.state.CheckboxId++;
-          }
         }
-        else if (currentQuestion.Type === "button") {
-           // Create answer entry
-          this.state.Answers[currentQuestion.Question] = "";
+      }
+      else if (currentQuestion.Type === "text") {
+          // Create answer entry
+        this.state.Answers[currentQuestion.Question] = "";
 
-          for (let key in surveyAnswers) {
-            let option = surveyAnswers[key];
-    
-            this.state.ViewArray.push(
-              <Button large title={option} buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => {this.state.Answers[currentQuestion.Question] = option; }} />
-              );
+        this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1}} defaultValue="" onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
+      }
+      this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+      
 
-          }
-        }
-        else if (currentQuestion.Type === "text") {
-           // Create answer entry
-          this.state.Answers[currentQuestion.Question] = "";
-
-          this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1}} defaultValue="" onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
-        }
-
-        this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+      if (this.state.CurrentQuestionIndex == this.state.SurveyQuestions.length - 1) {
+        this.state.ViewArray.push(<Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.submitData()}/>);
+      }
+      else {
+        this.state.ViewArray.push(<Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.loadNextQuestion()}/>);
       }
 
-      this.state.ViewArray.push(<Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.submitData()}/>);
-    }
-
-    componentDidMount(){
-      this.loadQuestions();
+      this.state.CurrentQuestionIndex++;
+      this.forceUpdate();
     }
 
     submitData() {
