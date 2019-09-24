@@ -10,6 +10,7 @@ import {
     Image,
     TextInput,
     CheckBox,
+    Dimensions,
     FlatList
     //Button,
     //PushNotificationIOS
@@ -17,8 +18,6 @@ import {
 var PushNotification = require("react-native-push-notification");
 import {  Divider, Button, List, ListItem } from 'react-native-elements';
 import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button';
-//import SelectMultiple from 'react-native-select-multiple';
-//import CheckBox from 'react-native-check-box';
 
 class SurveyScreen extends React.Component {
     constructor(props) {
@@ -27,33 +26,43 @@ class SurveyScreen extends React.Component {
       this.state = 
       {
         ViewArray: [],
-        checked: false,
         CurrentQuestionIndex: -1,
         SurveyQuestions: 
           [
             {
               Question: "How do you feel right now?",
               Type: "checkbox",
-              Answers: {
-                Answer1: "Very Good",
-                Answer2: "Good",
-                Answer3: "Okay",
-                Answer4: "Bad",
-                Answer5: "Very Bad",
-              }
+              Answers: [
+                {Answer: "Very Good", Followup: null},
+                {Answer: "Good", Followup: null},
+                {Answer: "Okay", Followup: null},
+                {Answer: "Bad", Followup: null},
+                {Answer: "Very Bad", Followup: null},
+              ]
             },
             {
               Question: "What did you eat for lunch?",
               Type: "button",
-              Answers: {
-                Answer1: "Hamburger",
-                Answer2: "Salad",
-                Answer3: "Tacos",
-              }
+              Answers: [
+                {Answer: "Hamburger", Followup: null},
+                {Answer: "Salad", Followup: null},
+                {Answer: "Tacos", Followup:
+                  {
+                    Question: "Did you fart?",
+                    Type: "button",
+                    Answers: [
+                      {Answer: "No", Followup: null},
+                      {Answer: "Maybe", Followup: null},
+                      {Answer: "Absolutely", Followup: null},
+                    ]
+                  }
+                }
+              ]
             },
             {
               Question: "Describe how this week went.",
               Type: "text",
+              Answers: [],
             },
           ],
         Answers: {
@@ -62,7 +71,9 @@ class SurveyScreen extends React.Component {
         Checkboxes: [], 
         CheckboxId: 1, 
         RadioProps: [],
-        Fruits: ['apples', 'pear',' banana'],
+        screenWidth: Dimensions.get('window').width,
+        screenHeight: Dimensions.get('window').height,
+
       };
 
       this.loadNextQuestion();
@@ -99,35 +110,13 @@ class SurveyScreen extends React.Component {
       });
     }
 
-    toggleCheckbox(id) {
-      const changedCheckbox = this.state.Checkboxes.find((cb) => cb.id === id);
-
-      changedCheckbox.checked = !changedCheckbox.checked;
-      const checkboxes = Object.assign({}, this.state.Checkboxes, changedCheckbox);
-      this.setState({ checkboxes });
-
-      this.forceUpdate();
-    }
-
-    onSelectionsChange = (selectedFruits) => {
-      // selectedFruits is array of { label, value }
-      this.state.Checkboxes = selectedFruits;
-    }
-
-    renderRow ({ item }) {
-      return (
-        <ListItem
-          title={item.name}
-          subtitle={item.subtitle}
-        />
-      )
-    }
-
-    loadNextQuestion() {
+    loadNextQuestion(goBackwards = false) {
       this.state.ViewArray = []
-      this.state.CurrentQuestionIndex++;
+      if (goBackwards) this.state.CurrentQuestionIndex--;
+      else this.state.CurrentQuestionIndex++;
 
       let currentQuestion = this.state.SurveyQuestions[this.state.CurrentQuestionIndex];
+      let currentAnswers = [];
 
       this.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
       let surveyAnswers = currentQuestion.Answers;
@@ -137,8 +126,10 @@ class SurveyScreen extends React.Component {
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = [];
 
-        for (var key in surveyAnswers) {
-          let option = surveyAnswers[key];
+        for (var i = 0; i < surveyAnswers.length; i++) {
+          let answer = surveyAnswers[i]; 
+          let option = answer.Answer;
+          let followup = answer.Followup;
 
           let cb = {id: this.state.CheckboxId, title: option, checked: false}
           this.state.Checkboxes.push(cb);
@@ -166,10 +157,13 @@ class SurveyScreen extends React.Component {
         this.state.Answers[currentQuestion.Question] = "";
         this.state.RadioProps = []
 
-        for (let key in surveyAnswers) {
-          let option = surveyAnswers[key];
+        // for (let answer in surveyAnswers) {
+        for (var i = 0; i < surveyAnswers.length; i++) {
+          let answer = surveyAnswers[i]; 
+          let option = answer.Answer;
+          let followup = answer.Followup;
 
-          this.state.RadioProps.push({label: option, value: option});
+          this.state.RadioProps.push({label: option, value: option, answer: answer});
         }
 
         this.state.ViewArray.push(
@@ -179,7 +173,21 @@ class SurveyScreen extends React.Component {
             animation={true}
             radio_props={this.state.RadioProps}
             initial={0}
-            onPress={(value) => {this.setState({value: value}); this.state.Answers[currentQuestion.Question] = value;}}
+            onPress={(value) => {
+              this.setState({value: value}); 
+              this.state.Answers[currentQuestion.Question] = value;
+              currentAnswers = [];
+              
+              // Insert answer into current answer (to check for followup)
+              for (var i = 0; i < this.state.RadioProps.length; i++) {
+                let prop = this.state.RadioProps[i];
+                if (value == prop.value) {
+                  currentAnswers.push(prop.answer);
+                }
+              }
+              
+              
+            }}
           />
         </View>
         );
@@ -192,13 +200,36 @@ class SurveyScreen extends React.Component {
         this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1}} defaultValue="" onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
       }
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
-      
 
+
+       // ================================= LOAD NEXT / BACK BUTTONS ==================================== //
       if (this.state.CurrentQuestionIndex == this.state.SurveyQuestions.length - 1) {
-        this.state.ViewArray.push(<Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.submitData()}/>);
+        this.state.ViewArray.push(
+          <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
+             <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.loadNextQuestion(true)}/>
+            <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.submitData()}/>
+          </View>
+          );
       }
       else {
-        this.state.ViewArray.push(<Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.loadNextQuestion()}/>);
+        this.state.ViewArray.push(
+        <View style={{flex: 1, flexDirection: 'row', justifyContent:'center'}}>
+          <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => this.loadNextQuestion(true)}/>
+          <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() =>
+            { 
+              // append followup question if there are any
+              for (var i = 0; i < currentAnswers.length; i++) {
+                var answer = currentAnswers[i];
+                alert(answer);
+                if (answer.Followup != null) {
+                  this.state.SurveyQuestions.splice(this.state.CurrentQuestionIndex + 1, 0, answer.Followup);
+                }
+              }
+              this.loadNextQuestion()
+            }
+          }/>
+        </View>
+        );
       }
 
       this.forceUpdate();
@@ -253,7 +284,6 @@ class SurveyScreen extends React.Component {
                   <View style={{ height: 50, }}></View>
                   <View style={styles.body}>
                     {this.state.ViewArray.map(info => info)}
-                    {/* <Button style={{height: 40, marginTop: 5,}} onPress={() => { this.loadNextQuestion(); }} title="Next Question" /> */}
                   </View>
                   <View style={{ height: 50, }}></View>
                   {/* <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => {this.props.navigation.push('Thankyou', {sendData: this.state.Answers});}}/> */}
