@@ -6,18 +6,20 @@ import {
     ScrollView,
     View,
     Text,
-    StatusBar,
     Image,
     TextInput,
     CheckBox,
     Dimensions,
-    FlatList
+    Switch,
+    TouchableHighlight
     //Button,
     //PushNotificationIOS
   } from 'react-native';
 var PushNotification = require("react-native-push-notification");
-import {  Divider, Button, List, ListItem } from 'react-native-elements';
+import {  Divider, Button } from 'react-native-elements';
 import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button';
+import RNRestart from 'react-native-restart'; 
+//import { TouchableHighlight } from 'react-native-gesture-handler';
 
 class SurveyScreen extends React.Component {
     constructor(props) {
@@ -73,11 +75,14 @@ class SurveyScreen extends React.Component {
         RadioProps: [],
         screenWidth: Dimensions.get('window').width,
         screenHeight: Dimensions.get('window').height,
+        checked: false,
+        props: this.props,
 
       };
+      
+    }
 
-      this.loadNextQuestion();
-
+    componentDidMount() {
       PushNotification.configure({
         // (optional) Called when Token is generated (iOS and Android)
         onRegister: function(token) {
@@ -86,7 +91,8 @@ class SurveyScreen extends React.Component {
       
         // (required) Called when a remote or local notification is opened or received
         onNotification: function(notification) {
-          console.log("NOTIFICATION:", notification);
+          RNRestart.Restart();
+          //console.log("NOTIFICATION:", notification);
         },
     
         // Should the initial notification be popped automatically
@@ -100,14 +106,21 @@ class SurveyScreen extends React.Component {
          */
         requestPermissions: true
       });
+
+      this.loadNextQuestion();
     }
 
     sendNotification() {
       PushNotification.localNotificationSchedule({
         //... You can use all the options from localNotifications
         message: "A survey is ready to be taken!", // (required)
-        date: new Date(Date.now() + 10 * 1000) // in 60 secs
+        date: new Date(Date.now() + 1 * 1000) // in 60 secs
       });
+    }
+
+    testfunc = (value) => {
+      this.state.checked = value; 
+      this.forceUpdate();
     }
 
     loadNextQuestion(goBackwards = false) {
@@ -136,13 +149,22 @@ class SurveyScreen extends React.Component {
           
           this.state.ViewArray.push(
             <View style={{ flexDirection: 'row', marginVertical: 5, marginHorizontal: 20 }}>
-            <CheckBox
-              value={cb.checked}
-              onTouchEnd={() => {cb.checked = !cb.checked;}}
-              onValueChange={() => {alert(cb.checked);}}
-            />
-            
-            <Text style={{marginTop: 5}}>{option}</Text>
+              <Switch title={cb.id} onValueChange={(value) => {this.state.checked = value; this.forceUpdate();}} value={this.state.checked}/>
+              <Text style={{marginTop: 5}}>{option}</Text>
+              {/* <Button 
+                title="Push me" 
+                style={this.state.checked
+                  ? styles.buttonPress
+                  : styles.button} 
+                  onPress={() => {this.state.checked = !this.state.checked; this.forceUpdate(); alert(this.state.checked)}}  
+              />
+              <TouchableHighlight 
+                activeOpacity={1}
+                underlayColor={'#660000'}
+                style={{backgroundColor: this.getBackgroundColor()}}
+                onPress={() => {this.state.checked = !this.state.checked; this.forceUpdate(); }}>
+                  <Text>Click me!</Text>
+              </TouchableHighlight> */}
             </View>
           );
           //<CheckBox checked={cb.checked} key={cb.id} title={cb.title} onTouchStart={(event) => {cb.checked = !cb.checked; this.state.Answers[currentQuestion.Question] = option}} />
@@ -206,8 +228,8 @@ class SurveyScreen extends React.Component {
       if (this.state.CurrentQuestionIndex == this.state.SurveyQuestions.length - 1) {
         this.state.ViewArray.push(
           <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
-             <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.loadNextQuestion(true)}/>
-            <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.submitData()}/>
+             <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => this.loadNextQuestion(true)}/>
+            <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => this.submitData()}/>
           </View>
           );
       }
@@ -235,6 +257,10 @@ class SurveyScreen extends React.Component {
       this.forceUpdate();
     }
 
+    getBackgroundColor() {
+      return this.state.checked ? '#660000' : '#006600';
+    }
+
     submitData() {
       this.state.ViewArray = [];
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
@@ -243,28 +269,16 @@ class SurveyScreen extends React.Component {
 
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
-
-      // var ans = JSON.stringify(this.state.Answers);
-      // this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
       for (var key in this.state.Answers) {
         var ans = this.state.Answers[key];
         
         this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
         this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
-
-        // var key1 = JSON.stringify(key);
-        // var ans1 = JSON.stringify(ans);
-        // this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key1}</Text>);
-        // this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans1}</Text>);
         
       }
 
       this.sendNotification();
       this.forceUpdate();
-    }
-
-    createView() {
-      return this.state.ViewArray.map(info => info);
     }
   
     render() {
@@ -286,8 +300,6 @@ class SurveyScreen extends React.Component {
                     {this.state.ViewArray.map(info => info)}
                   </View>
                   <View style={{ height: 50, }}></View>
-                  {/* <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => {this.props.navigation.push('Thankyou', {sendData: this.state.Answers});}}/> */}
-                  {/* <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 20}} onPress={() => this.submitData()}/> */}
     
               </View>
             </ScrollView>
@@ -347,5 +359,31 @@ const styles = StyleSheet.create({
       padding: 4,
       paddingRight: 12,
       textAlign: 'right',
+    },
+    // ================================ Test ============================== //
+    button: {
+      borderColor: "#000066",
+      borderWidth: 1,
+      borderRadius: 10,
+      backgroundColor: '#660000'
+    },
+    buttonPress: {
+        borderColor: "#000066",
+        backgroundColor: "#000066",
+        borderWidth: 1,
+        borderRadius: 10,
+        backgroundColor: '#006600'
+    },
+    welcome: {
+      fontSize: 20,
+      textAlign: "center",
+      margin: 10,
+      color: "#000066"
+    },
+    welcomePress: {
+        fontSize: 20,
+        textAlign: "center",
+        margin: 10,
+        color: "#ffffff"
     },
   });

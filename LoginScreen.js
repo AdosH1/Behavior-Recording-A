@@ -5,56 +5,16 @@ import {
     ScrollView,
     View,
     Text,
-    StatusBar,
     Image,
     TextInput,
     Button,
-    //PushNotificationIOS
   } from 'react-native';
-var PushNotification = require("react-native-push-notification");
+import { withNavigation } from 'react-navigation';
 
 
 class LoginScreen extends React.Component {
     constructor(props) {
     super(props);
-
-    PushNotification.configure({
-      // (optional) Called when Token is generated (iOS and Android)
-      onRegister: function(token) {
-        console.log("TOKEN:", token);
-      },
-    
-      // (required) Called when a remote or local notification is opened or received
-      onNotification: function(notification) {
-        console.log("NOTIFICATION:", notification);
-      },
-  
-      // Should the initial notification be popped automatically
-      // default: true
-      popInitialNotification: true,
-    
-      /**
-       * (optional) default: true
-       * - Specified if permissions (ios) and token (android and ios) will requested or not,
-       * - if not, you must call PushNotificationsHandler.requestPermissions() later
-       */
-      requestPermissions: true
-    });
-
-
-    // setTimeout(function() {
-    //   PushNotificationIOS.presentLocalNotification({ alertBody: "A survey is ready to be taken.", alertAction: "view" });
-    // }, 120000);
-
-  }
-
-  sendNotification() {
-    PushNotification.localNotificationSchedule({
-      //... You can use all the options from localNotifications
-      message: "A survey is ready to be taken!", // (required)
-      date: new Date(Date.now() + 20 * 1000) // in 20 secs
-    });
-    
   }
   
   render() {
@@ -73,7 +33,6 @@ class LoginScreen extends React.Component {
                 <View style={{ height: 50, }}></View>
                 <View style={styles.body}>
                   <View style={styles.sectionContainer}>
-                    {/* {this.sendNotification()} */}
                     <Text style={styles.sectionTitle}>Login</Text>
                     <Text>Username: </Text>
                     <TextInput
@@ -83,10 +42,7 @@ class LoginScreen extends React.Component {
                     <TextInput
                       style={styles.userInput}
                       placeholder="Enter password here."/>
-                    {/* <Button style={{height: 40, marginTop: 5,}} onPress={() => this.props.navigation.navigate('Survey')} title="Login" /> */}
                     <Button style={{height: 40, marginVertical: 10,}} onPress={() => { this.props.navigation.push('Survey');}} title="Login" />
-
-                    {/* const {navigate} = this.props.navigation; */}
                   </View>
                 </View>
   
@@ -98,7 +54,7 @@ class LoginScreen extends React.Component {
   }
 };
 
-export default LoginScreen;
+export default withNavigation(LoginScreen);
 
 const styles = StyleSheet.create({
     scrollView: {
@@ -111,9 +67,6 @@ const styles = StyleSheet.create({
     sectionContainer: {
       marginTop: 32,
       paddingHorizontal: 24,
-      // borderStyle: 'solid',
-      // borderWidth: 1,
-      // borderColor: 'grey',
       padding: 10,
       flex: 1,
       flexDirection: 'column',
