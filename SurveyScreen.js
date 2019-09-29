@@ -29,17 +29,18 @@ class SurveyScreen extends React.Component {
       {
         ViewArray: [],
         CurrentQuestionIndex: -1,
+        CurrentQuestion: "",
         SurveyQuestions: 
           [
             {
-              Question: "How do you feel right now?",
+              Question: "What type of weather do you like?",
               Type: "checkbox",
               Answers: [
-                {Answer: "Very Good", Followup: null},
-                {Answer: "Good", Followup: null},
-                {Answer: "Okay", Followup: null},
-                {Answer: "Bad", Followup: null},
-                {Answer: "Very Bad", Followup: null},
+                {Answer: "Sunny", Followup: null},
+                {Answer: "Gloomy", Followup: null},
+                {Answer: "Windy", Followup: null},
+                {Answer: "Wet", Followup: null},
+                {Answer: "Humid", Followup: null},
               ]
             },
             {
@@ -50,7 +51,7 @@ class SurveyScreen extends React.Component {
                 {Answer: "Salad", Followup: null},
                 {Answer: "Tacos", Followup:
                   {
-                    Question: "Did you fart?",
+                    Question: "Did you enjoy the taco?",
                     Type: "button",
                     Answers: [
                       {Answer: "No", Followup: null},
@@ -66,18 +67,29 @@ class SurveyScreen extends React.Component {
               Type: "text",
               Answers: [],
             },
+            {
+              Question: "Which foods would you like to eat for dinner?",
+              Type: "checkbox",
+              Answers: [
+                {Answer: "Sushi", Followup: null},
+                {Answer: "Steak", Followup: null},
+                {Answer: "Fish and Chips", Followup: null},
+                {Answer: "Avo' on Toast", Followup: null},
+                {Answer: "Salad", Followup: null},
+              ]
+            },
           ],
         Answers: {
 
         },
         Checkboxes: [], 
-        CheckboxId: 1, 
+        CheckboxId: 0, 
         RadioProps: [],
         screenWidth: Dimensions.get('window').width,
         screenHeight: Dimensions.get('window').height,
-        checked: false,
-        props: this.props,
-
+        IsCheckboxQuestion: true,
+        ShowCheckboxes: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, ],
+        CheckboxText: ["", "","","","","","","","","","","","","","","","","","","",],
       };
       
     }
@@ -114,68 +126,36 @@ class SurveyScreen extends React.Component {
       PushNotification.localNotificationSchedule({
         //... You can use all the options from localNotifications
         message: "A survey is ready to be taken!", // (required)
-        date: new Date(Date.now() + 1 * 1000) // in 60 secs
+        date: new Date(Date.now() + 10 * 1000) // in 60 secs
       });
-    }
-
-    testfunc = (value) => {
-      this.state.checked = value; 
-      this.forceUpdate();
     }
 
     loadNextQuestion(goBackwards = false) {
       this.state.ViewArray = []
+      this.state.IsCheckboxQuestion = false;
+
       if (goBackwards) this.state.CurrentQuestionIndex--;
       else this.state.CurrentQuestionIndex++;
 
       let currentQuestion = this.state.SurveyQuestions[this.state.CurrentQuestionIndex];
       let currentAnswers = [];
 
-      this.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
+      this.state.CurrentQuestion = currentQuestion.Question;
       let surveyAnswers = currentQuestion.Answers;
 
       // ================================= CHECKBOXES ==================================== //
       if (currentQuestion.Type === "checkbox") { 
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = [];
+        this.state.IsCheckboxQuestion = true;
 
-        for (var i = 0; i < surveyAnswers.length; i++) {
-          let answer = surveyAnswers[i]; 
-          let option = answer.Answer;
-          let followup = answer.Followup;
-
-          let cb = {id: this.state.CheckboxId, title: option, checked: false}
-          this.state.Checkboxes.push(cb);
-          
-          this.state.ViewArray.push(
-            <View style={{ flexDirection: 'row', marginVertical: 5, marginHorizontal: 20 }}>
-              <Switch title={cb.id} onValueChange={(value) => {this.state.checked = value; this.forceUpdate();}} value={this.state.checked}/>
-              <Text style={{marginTop: 5}}>{option}</Text>
-              {/* <Button 
-                title="Push me" 
-                style={this.state.checked
-                  ? styles.buttonPress
-                  : styles.button} 
-                  onPress={() => {this.state.checked = !this.state.checked; this.forceUpdate(); alert(this.state.checked)}}  
-              />
-              <TouchableHighlight 
-                activeOpacity={1}
-                underlayColor={'#660000'}
-                style={{backgroundColor: this.getBackgroundColor()}}
-                onPress={() => {this.state.checked = !this.state.checked; this.forceUpdate(); }}>
-                  <Text>Click me!</Text>
-              </TouchableHighlight> */}
-            </View>
-          );
-          //<CheckBox checked={cb.checked} key={cb.id} title={cb.title} onTouchStart={(event) => {cb.checked = !cb.checked; this.state.Answers[currentQuestion.Question] = option}} />
-          this.state.CheckboxId++;
-        }
-
-
+        this.constructCheckboxes(surveyAnswers);
       }
       // ================================= BUTTONS ==================================== //
       else if (currentQuestion.Type === "button") {
-          // Create answer entry
+        this.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
+        
+        // Create answer entry
         this.state.Answers[currentQuestion.Question] = "";
         this.state.RadioProps = []
 
@@ -208,7 +188,6 @@ class SurveyScreen extends React.Component {
                 }
               }
               
-              
             }}
           />
         </View>
@@ -216,7 +195,8 @@ class SurveyScreen extends React.Component {
       }
       // ================================= TEXT ==================================== //
       else if (currentQuestion.Type === "text") {
-          // Create answer entry
+        this.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
+        // Create answer entry
         this.state.Answers[currentQuestion.Question] = "";
 
         this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1}} defaultValue="" onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
@@ -242,7 +222,6 @@ class SurveyScreen extends React.Component {
               // append followup question if there are any
               for (var i = 0; i < currentAnswers.length; i++) {
                 var answer = currentAnswers[i];
-                alert(answer);
                 if (answer.Followup != null) {
                   this.state.SurveyQuestions.splice(this.state.CurrentQuestionIndex + 1, 0, answer.Followup);
                 }
@@ -257,27 +236,77 @@ class SurveyScreen extends React.Component {
       this.forceUpdate();
     }
 
-    getBackgroundColor() {
-      return this.state.checked ? '#660000' : '#006600';
-    }
-
     submitData() {
+      this.state.IsCheckboxQuestion = false;
       this.state.ViewArray = [];
+
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
-
       this.state.ViewArray.push(<Text style={styles.sectionTitle}>Thank you for participating in this survey.</Text>);
-
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
       for (var key in this.state.Answers) {
         var ans = this.state.Answers[key];
-        
         this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
         this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
-        
       }
 
       this.sendNotification();
+      this.forceUpdate();
+    }
+
+    constructCheckboxes(answers) {
+      // Clear checkboxes
+      this.state.Checkboxes = []
+      for (var i = 0; i < this.state.ShowCheckboxes.length; i++) {
+        this.state.ShowCheckboxes[i] = false;
+      }
+  
+      // Add new checkboxes
+      let checkboxesSeen = 0; // 0 - 19 (20 boxes)
+      for (var i = 0; i < answers.length; i++) {
+        let ans = answers[i];
+
+        let id = this.state.CheckboxId + 1;
+        let checked = false;
+        let option = ans.Answer;
+        
+        let cb = {id: id, option: option, checked: checked};
+        this.state.Checkboxes.push(cb);
+        this.state.ShowCheckboxes[i] = true;
+        this.state.CheckboxText[i] = option;
+  
+        checkboxesSeen = i;
+        this.state.CheckboxId++;
+      }
+  
+      for (var i = checkboxesSeen + 1; i < 20; i++){
+        let cb = {id: this.state.CheckboxId+1, checked: false};
+        this.state.Checkboxes.push(cb);
+        this.state.ShowCheckboxes[i] = false;
+        this.state.CheckboxText[i] = "";
+      }
+    }
+
+    updateCheckboxAnswers(){
+      let answer = "";
+      for (var i = 0; i < this.state.Checkboxes.length; i++) {
+
+        if (this.state.Checkboxes[i].checked) {
+
+          if (answer == "") answer += this.state.Checkboxes[i].option;
+          else {
+            answer += (", " + this.state.Checkboxes[i].option);
+          }
+
+        }
+      }
+
+      this.state.Answers[this.state.CurrentQuestion] = answer;
+    }
+
+    checkboxChanged(index, value) {
+      this.state.Checkboxes[index].checked = value; 
+      this.updateCheckboxAnswers();
       this.forceUpdate();
     }
   
@@ -297,6 +326,32 @@ class SurveyScreen extends React.Component {
     
                   <View style={{ height: 50, }}></View>
                   <View style={styles.body}>
+                  {this.state.IsCheckboxQuestion? <Text style={styles.sectionTitle}>{this.state.CurrentQuestion}</Text> : null}
+                  {this.state.IsCheckboxQuestion? 
+                      <View style={{flex: 1, flexDirection: 'column', justifyContent:'center'}}>
+                        {this.state.ShowCheckboxes[0] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(0, value)}} value={this.state.Checkboxes[0].checked}/><Text>{this.state.CheckboxText[0]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[1] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(1, value)}} value={this.state.Checkboxes[1].checked}/><Text>{this.state.CheckboxText[1]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[2] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(2, value)}} value={this.state.Checkboxes[2].checked}/><Text>{this.state.CheckboxText[2]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[3] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(3, value)}} value={this.state.Checkboxes[3].checked}/><Text>{this.state.CheckboxText[3]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[4] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(4, value)}} value={this.state.Checkboxes[4].checked}/><Text>{this.state.CheckboxText[4]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[5] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(5, value)}} value={this.state.Checkboxes[5].checked}/><Text>{this.state.CheckboxText[5]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[6] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(6, value)}} value={this.state.Checkboxes[6].checked}/><Text>{this.state.CheckboxText[6]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[7] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(7, value)}} value={this.state.Checkboxes[7].checked}/><Text>{this.state.CheckboxText[7]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[8] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(8, value)}} value={this.state.Checkboxes[8].checked}/><Text>{this.state.CheckboxText[8]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[9] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(9, value)}} value={this.state.Checkboxes[9].checked}/><Text>{this.state.CheckboxText[9]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[10] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[10].checked}/><Text>{this.state.CheckboxText[10]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[11] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[11].checked}/><Text>{this.state.CheckboxText[11]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[12] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[12].checked}/><Text>{this.state.CheckboxText[12]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[13] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[13].checked}/><Text>{this.state.CheckboxText[13]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[14] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[14].checked}/><Text>{this.state.CheckboxText[14]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[15] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[15].checked}/><Text>{this.state.CheckboxText[15]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[16] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[16].checked}/><Text>{this.state.CheckboxText[16]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[17] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[17].checked}/><Text>{this.state.CheckboxText[17]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[18] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[18].checked}/><Text>{this.state.CheckboxText[18]}</Text></View> : null }
+                        {this.state.ShowCheckboxes[19] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(10, value)}} value={this.state.Checkboxes[19].checked}/><Text>{this.state.CheckboxText[19]}</Text></View> : null }
+                        
+                      </View> : null
+                    }
                     {this.state.ViewArray.map(info => info)}
                   </View>
                   <View style={{ height: 50, }}></View>
@@ -322,9 +377,6 @@ const styles = StyleSheet.create({
     sectionContainer: {
       marginTop: 32,
       paddingHorizontal: 24,
-      // borderStyle: 'solid',
-      // borderWidth: 1,
-      // borderColor: 'grey',
       padding: 10,
       flex: 1,
       flexDirection: 'column',
@@ -360,30 +412,10 @@ const styles = StyleSheet.create({
       paddingRight: 12,
       textAlign: 'right',
     },
-    // ================================ Test ============================== //
-    button: {
-      borderColor: "#000066",
-      borderWidth: 1,
-      borderRadius: 10,
-      backgroundColor: '#660000'
-    },
-    buttonPress: {
-        borderColor: "#000066",
-        backgroundColor: "#000066",
-        borderWidth: 1,
-        borderRadius: 10,
-        backgroundColor: '#006600'
-    },
-    welcome: {
-      fontSize: 20,
-      textAlign: "center",
-      margin: 10,
-      color: "#000066"
-    },
-    welcomePress: {
-        fontSize: 20,
-        textAlign: "center",
-        margin: 10,
-        color: "#ffffff"
+    checkboxStyle: {
+      flex: 1, 
+      flexDirection: 'row', 
+      marginVertical: 5, 
+      marginHorizontal: 20
     },
   });
