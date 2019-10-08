@@ -193,7 +193,7 @@ class SurveyScreen extends React.Component {
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = "";
 
-        this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1}} defaultValue="" onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
+        this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1}} defaultValue="" multiline={true} onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
       }
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
