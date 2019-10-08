@@ -8,18 +8,14 @@ import {
     Text,
     Image,
     TextInput,
-    CheckBox,
     Dimensions,
     Switch,
-    TouchableHighlight
-    //Button,
-    //PushNotificationIOS
+    PushNotificationIOS
   } from 'react-native';
 var PushNotification = require("react-native-push-notification");
 import {  Divider, Button } from 'react-native-elements';
-import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button';
+import RadioForm from 'react-native-simple-radio-button';
 import RNRestart from 'react-native-restart'; 
-//import { TouchableHighlight } from 'react-native-gesture-handler';
 
 class SurveyScreen extends React.Component {
     constructor(props) {
@@ -95,22 +91,20 @@ class SurveyScreen extends React.Component {
     }
 
     componentDidMount() {
+      PushNotificationIOS.requestPermissions();
+
       PushNotification.configure({
         // (optional) Called when Token is generated (iOS and Android)
         onRegister: function(token) {
           console.log("TOKEN:", token);
         },
-      
         // (required) Called when a remote or local notification is opened or received
         onNotification: function(notification) {
           RNRestart.Restart();
-          //console.log("NOTIFICATION:", notification);
         },
-    
         // Should the initial notification be popped automatically
         // default: true
         popInitialNotification: true,
-      
         /**
          * (optional) default: true
          * - Specified if permissions (ios) and token (android and ios) will requested or not,
@@ -123,6 +117,9 @@ class SurveyScreen extends React.Component {
     }
 
     sendNotification() {
+      setTimeout(function() {
+          PushNotificationIOS.presentLocalNotification({ alertBody: "Test Push Notification Function", alertAction: "view" });
+      }, 10000);
       PushNotification.localNotificationSchedule({
         //... You can use all the options from localNotifications
         message: "A survey is ready to be taken!", // (required)
@@ -213,6 +210,25 @@ class SurveyScreen extends React.Component {
           </View>
           );
       }
+      else if (this.state.CurrentQuestionIndex == 0) {
+        this.state.ViewArray.push(
+          <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
+            <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => {}}/>
+            <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() =>
+            { 
+              // append followup question if there are any
+              for (var i = 0; i < currentAnswers.length; i++) {
+                var answer = currentAnswers[i];
+                if (answer.Followup != null) {
+                  this.state.SurveyQuestions.splice(this.state.CurrentQuestionIndex + 1, 0, answer.Followup);
+                }
+              }
+              this.loadNextQuestion()
+            }
+          }/>
+          </View>
+          );
+      }
       else {
         this.state.ViewArray.push(
         <View style={{flex: 1, flexDirection: 'row', justifyContent:'center'}}>
@@ -297,7 +313,6 @@ class SurveyScreen extends React.Component {
           else {
             answer += (", " + this.state.Checkboxes[i].option);
           }
-
         }
       }
 

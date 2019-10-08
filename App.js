@@ -1,5 +1,4 @@
-var PushNotification = require("react-native-push-notification");
-
+import { Platform } from 'react-native';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import LoginScreen from './LoginScreen';
