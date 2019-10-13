@@ -79,33 +79,40 @@ class LoginScreen extends React.Component {
       }
     }
 
-    // on success
-    if (this.state.rememberCredentials) {
-      // store user credentials
-      let user = {username: this.state.username, password: this.state.password, saveCredentials: this.state.rememberCredentials};
-      this.storeCredentials(user);
-    }
-    else {
-      // erase user credentials
-      let user = {username: "", password: "", saveCredentials: this.state.rememberCredentials};
-      this.storeCredentials(user);
-    }
-    
+    //let data = {};
 
-    // fetch('https://reqres.in/api/users', data)
-    //   .then((response) => response.json())
-    //         .then((responseJson) => {
     
-    //     }).catch((error) => {
-    //       //Error 
-    //       console.error(error);
-    //   });
+    
+    // ========================= Get server data ========================== //
+    //fetch('https://reqres.in/api/users', data)
+    fetch('http://172.20.10.2:3000/user-login', data)
+      .then((response) => response.json())
+            .then((responseJson) => {
 
-    this.props.navigation.push('Survey');
-  
-    // on error
-    //this.state.error = true;
-    //this.forceUpdate();
+          // ============= on success ============== //
+          // Remember recredentials
+          if (this.state.rememberCredentials) {
+            // store user credentials
+            let user = {username: this.state.username, password: this.state.password, saveCredentials: this.state.rememberCredentials};
+            this.storeCredentials(user);
+          }
+          else {
+            // erase user credentials
+            let user = {username: "", password: "", saveCredentials: this.state.rememberCredentials};
+            this.storeCredentials(user);
+          }
+
+          // Go to next screen with data
+          this.props.navigation.push('Survey', {serverData: responseJson, username: this.state.username});
+
+        }).catch((error) => {
+          // ============= on failure ============== //
+          this.state.error = true;
+          this.forceUpdate();
+
+          console.error(error);
+      });
+
   }
   
   render() {

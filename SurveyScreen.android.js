@@ -8,10 +8,8 @@ import {
     Text,
     Image,
     TextInput,
-    CheckBox,
     Dimensions,
     Switch,
-    TouchableHighlight
   } from 'react-native';
 var PushNotification = require("react-native-push-notification");
 import {  Divider, Button } from 'react-native-elements';
@@ -22,6 +20,8 @@ class SurveyScreen extends React.Component {
     constructor(props) {
       super(props);
 
+      const { navigation } = this.props;
+
       this.state = 
       {
         ViewArray: [],
@@ -31,7 +31,7 @@ class SurveyScreen extends React.Component {
           [
             {
               Question: "What type of weather do you like?",
-              Type: "checkbox",
+              Type: "multiple",
               Answers: [
                 {Answer: "Sunny", Followup: null},
                 {Answer: "Gloomy", Followup: null},
@@ -42,14 +42,14 @@ class SurveyScreen extends React.Component {
             },
             {
               Question: "What did you eat for lunch?",
-              Type: "button",
+              Type: "single",
               Answers: [
                 {Answer: "Hamburger", Followup: null},
                 {Answer: "Salad", Followup: null},
                 {Answer: "Tacos", Followup:
                   {
                     Question: "Did you enjoy the taco?",
-                    Type: "button",
+                    Type: "single",
                     Answers: [
                       {Answer: "No", Followup: null},
                       {Answer: "Maybe", Followup: null},
@@ -66,7 +66,7 @@ class SurveyScreen extends React.Component {
             },
             {
               Question: "Which foods would you like to eat for dinner?",
-              Type: "checkbox",
+              Type: "multiple",
               Answers: [
                 {Answer: "Sushi", Followup: null},
                 {Answer: "Steak", Followup: null},
@@ -87,8 +87,11 @@ class SurveyScreen extends React.Component {
         IsCheckboxQuestion: true,
         ShowCheckboxes: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, ],
         CheckboxText: ["", "","","","","","","","","","","","","","","","","","","",],
+        Username: "",
       };
       
+      this.convertServerDataToSurvey(navigation.getParam('serverData', 'Unable to find server data.'));
+      this.state.Username = navigation.getParam('username', 'Unable to find user data');
     }
 
     componentDidMount() {
@@ -116,11 +119,68 @@ class SurveyScreen extends React.Component {
       this.loadNextQuestion();
     }
 
-    sendNotification() {
+    convertServerDataToSurvey(serverData) {
+      // Clear default survey questions
+      this.state.SurveyQuestions = [];
+
+      for (var i = 0; i < serverData.questions.length; i++) {
+        let SQ = serverData.questions[i];
+
+        // Create list of answers
+        let answers = [];
+        for (var j = 0; j < SQ.content.length; j++) {
+          let SQans = SQ.content[j];
+          //alert(SQ.content.length);
+          // Create list of followups
+          let SQFollowupAns = []
+          
+          let hasFollowup = SQans.followUp.title != null;
+          if (hasFollowup) {
+            if (SQans.followUp.type == "text") {
+
+            }
+            else {
+              for (var k = 0; k < SQans.followUp.content.length; k++) {
+                let SQFollowup = SQans.followUp.content[k];
+                let followUpAns = {
+                  Answer: SQFollowup.title,
+                  Followup: null
+                }
+                SQFollowupAns.push(followUpAns);
+              }
+            }
+         }
+
+          let SQFollowup = hasFollowup ? {
+            Question: SQans.followUp.title,
+            Type: SQans.followUp.type,
+            Answers: SQFollowupAns
+          } : null;
+
+          // =======================================
+          let ansObj = {
+            Answer: SQans.title,
+            Followup: SQFollowup
+          }
+
+          answers.push(ansObj);
+        }
+
+        let SurveyQuestion = { 
+          Question: SQ.title,
+          Type: SQ.type,
+          Answers: answers
+         };
+        this.state.SurveyQuestions.push(SurveyQuestion);
+      }
+
+    }
+
+    sendNotification(seconds) {
       PushNotification.localNotificationSchedule({
         //... You can use all the options from localNotifications
         message: "A survey is ready to be taken!", // (required)
-        date: new Date(Date.now() + 10 * 1000) // in 60 secs
+        date: new Date(Date.now() + seconds * 1000) // in 60 secs
       });
     }
 
@@ -138,7 +198,7 @@ class SurveyScreen extends React.Component {
       let surveyAnswers = currentQuestion.Answers;
 
       // ================================= CHECKBOXES ==================================== //
-      if (currentQuestion.Type === "checkbox") { 
+      if (currentQuestion.Type === "multiple") { 
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = [];
         this.state.IsCheckboxQuestion = true;
@@ -146,7 +206,7 @@ class SurveyScreen extends React.Component {
         this.constructCheckboxes(surveyAnswers);
       }
       // ================================= BUTTONS ==================================== //
-      else if (currentQuestion.Type === "button") {
+      else if (currentQuestion.Type === "single") {
         this.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
         
         // Create answer entry
@@ -257,13 +317,43 @@ class SurveyScreen extends React.Component {
       this.state.ViewArray.push(<Text style={styles.sectionTitle}>Thank you for participating in this survey.</Text>);
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
-      for (var key in this.state.Answers) {
-        var ans = this.state.Answers[key];
-        this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
-        this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
+      // for (var key in this.state.Answers) {
+      //   var ans = this.state.Answers[key];
+      //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
+      //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
+      // }
+      //let data = this.state.Answers;
+
+      // Post results
+      let data = {
+        method: 'POST',
+        body: JSON.stringify({
+            data: this.state.Answers,
+            username: this.state.Username,
+        }),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
       }
 
-      this.sendNotification();
+      //fetch('https://reqres.in/api/users', data)
+      fetch('http://172.20.10.2:3000/projectAPI/' + this.state.Username, data)
+      .then((response) => response.json())
+            .then((responseJson) => {
+
+          // ============= on success ============== //
+          alert(JSON.stringify(responseJson));
+
+          // Adjust notification time
+          this.sendNotification(responseJson.interval);
+
+        }).catch((error) => {
+          // ============= on failure ============== //
+          alert(error);
+      });
+
+      
       this.forceUpdate();
     }
 

@@ -21,6 +21,9 @@ class SurveyScreen extends React.Component {
     constructor(props) {
       super(props);
 
+      const { navigation } = this.props;
+      alert(JSON.stringify(navigation.getParam('serverData', 'Unable to find server data.')))
+
       this.state = 
       {
         ViewArray: [],
