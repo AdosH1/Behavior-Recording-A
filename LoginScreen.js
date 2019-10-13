@@ -79,12 +79,8 @@ class LoginScreen extends React.Component {
       }
     }
 
-    //let data = {};
-
-    
     
     // ========================= Get server data ========================== //
-    //fetch('https://reqres.in/api/users', data)
     fetch('http://172.20.10.2:3000/user-login', data)
       .then((response) => response.json())
             .then((responseJson) => {

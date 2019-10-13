@@ -12,7 +12,7 @@ import {
     Switch,
   } from 'react-native';
 var PushNotification = require("react-native-push-notification");
-import {  Divider, Button } from 'react-native-elements';
+import {  Divider, Button, Slider } from 'react-native-elements';
 import RadioForm from 'react-native-simple-radio-button';
 import RNRestart from 'react-native-restart'; 
 
@@ -29,6 +29,13 @@ class SurveyScreen extends React.Component {
         CurrentQuestion: "",
         SurveyQuestions: 
           [
+            {
+              Question: "Test question",
+              Type: "slider",
+              SliderMinValue: 0,
+              SliderMaxValue: 200,
+              SliderStepValue: 5,
+            },
             {
               Question: "What type of weather do you like?",
               Type: "multiple",
@@ -84,10 +91,19 @@ class SurveyScreen extends React.Component {
         RadioProps: [],
         screenWidth: Dimensions.get('window').width,
         screenHeight: Dimensions.get('window').height,
+        ShowAlternateQuestion: false,
+        // ============ Checkbox ========== //
         IsCheckboxQuestion: true,
         ShowCheckboxes: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, ],
         CheckboxText: ["", "","","","","","","","","","","","","","","","","","","",],
         Username: "",
+        // ============ Slider ============ //
+        ShowSlider: false,
+        sliderText: "",
+        sliderMinValue: 0,
+        sliderMaxValue: 100,
+        sliderStepValue: 20,
+        sliderValue: 5,
       };
       
       this.convertServerDataToSurvey(navigation.getParam('serverData', 'Unable to find server data.'));
@@ -187,6 +203,8 @@ class SurveyScreen extends React.Component {
     loadNextQuestion(goBackwards = false) {
       this.state.ViewArray = []
       this.state.IsCheckboxQuestion = false;
+      this.state.ShowAlternateQuestion = false;
+      this.state.ShowSlider = false;
 
       if (goBackwards) this.state.CurrentQuestionIndex--;
       else this.state.CurrentQuestionIndex++;
@@ -202,6 +220,7 @@ class SurveyScreen extends React.Component {
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = [];
         this.state.IsCheckboxQuestion = true;
+        this.state.ShowAlternateQuestion = true;
 
         this.constructCheckboxes(surveyAnswers);
       }
@@ -254,6 +273,19 @@ class SurveyScreen extends React.Component {
         this.state.Answers[currentQuestion.Question] = "";
 
         this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1}} defaultValue="" multiline={true} onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
+      }
+      // ================================= SLIDER ==================================== //
+      else if (currentQuestion.Type === "slider") {
+        this.state.ShowSlider = true;
+        this.state.ShowAlternateQuestion = true;
+        
+        // Create answer entry
+        this.state.Answers[currentQuestion.Question] = "";
+        this.state.sliderMinValue = currentQuestion.SliderMinValue;
+        this.state.sliderMaxValue = currentQuestion.SliderMaxValue;
+        this.state.sliderStepValue = currentQuestion.SliderStepValue;
+        this.state.sliderText = "Value: " + this.state.sliderValue.toString();
+
       }
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
@@ -311,17 +343,18 @@ class SurveyScreen extends React.Component {
 
     submitData() {
       this.state.IsCheckboxQuestion = false;
+      this.state.ShowAlternateQuestion = false;
       this.state.ViewArray = [];
 
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
       this.state.ViewArray.push(<Text style={styles.sectionTitle}>Thank you for participating in this survey.</Text>);
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
-      // for (var key in this.state.Answers) {
-      //   var ans = this.state.Answers[key];
-      //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
-      //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
-      // }
+      for (var key in this.state.Answers) {
+        var ans = this.state.Answers[key];
+        this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
+        this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
+      }
       //let data = this.state.Answers;
 
       // Post results
@@ -337,7 +370,6 @@ class SurveyScreen extends React.Component {
         }
       }
 
-      //fetch('https://reqres.in/api/users', data)
       fetch('http://172.20.10.2:3000/projectAPI/' + this.state.Username, data)
       .then((response) => response.json())
             .then((responseJson) => {
@@ -353,7 +385,6 @@ class SurveyScreen extends React.Component {
           alert(error);
       });
 
-      
       this.forceUpdate();
     }
 
@@ -407,6 +438,14 @@ class SurveyScreen extends React.Component {
       this.state.Answers[this.state.CurrentQuestion] = answer;
     }
 
+    updateSlider(value) {
+      this.state.sliderValue = value; 
+
+      this.state.sliderText = "Value: " + this.state.sliderValue.toString();
+      this.state.Answers[this.state.CurrentQuestion] = this.state.sliderValue.toString();
+      this.forceUpdate();
+    }
+
     checkboxChanged(index, value) {
       this.state.Checkboxes[index].checked = value; 
       this.updateCheckboxAnswers();
@@ -429,7 +468,8 @@ class SurveyScreen extends React.Component {
     
                   <View style={{ height: 50, }}></View>
                   <View style={styles.body}>
-                  {this.state.IsCheckboxQuestion? <Text style={styles.sectionTitle}>{this.state.CurrentQuestion}</Text> : null}
+                  {this.state.ShowAlternateQuestion ? <Text style={styles.sectionTitle}>{this.state.CurrentQuestion}</Text> : null}
+
                   {this.state.IsCheckboxQuestion? 
                       <View style={{flex: 1, flexDirection: 'column', justifyContent:'center'}}>
                         {this.state.ShowCheckboxes[0] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(0, value)}} value={this.state.Checkboxes[0].checked}/><Text>{this.state.CheckboxText[0]}</Text></View> : null }
@@ -455,6 +495,19 @@ class SurveyScreen extends React.Component {
                         
                       </View> : null
                     }
+
+                  {this.state.ShowSlider? 
+                    <View style={{marginHorizontal: 20, marginVertical: 5}}>
+                      <Slider 
+                        value={this.state.sliderValue}
+                        onValueChange={(value) => { this.updateSlider(value); }}
+                        minimumValue={this.state.sliderMinValue}
+                        maximumValue={this.state.sliderMaxValue}
+                        step={this.state.sliderStepValue}/>
+                      <Text>{this.state.sliderText}</Text>
+                    </View> : null 
+                  }
+
                     {this.state.ViewArray.map(info => info)}
                   </View>
                   <View style={{ height: 50, }}></View>
