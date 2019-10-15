@@ -308,14 +308,22 @@ class SurveyScreen extends React.Component {
 
 
        // ================================= LOAD NEXT / BACK BUTTONS ==================================== //
+       // ======================== Last Question, Show Submit Button ========================= //
       if (this.state.CurrentQuestionIndex == this.state.SurveyQuestions.length - 1) {
         this.state.ViewArray.push(
           <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
              <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => this.loadNextQuestion(true)}/>
-            <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => this.submitData()}/>
+            <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => {
+              if(this.checkAndAppendFollowUp(currentAnswers)) {
+                this.loadNextQuestion();
+              } else {
+              this.submitData();
+              }
+              }} />
           </View>
           );
       }
+      // ======================== First Question, No Back Button ========================= //
       else if (this.state.CurrentQuestionIndex == 0) {
         this.state.ViewArray.push(
           <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
@@ -323,18 +331,14 @@ class SurveyScreen extends React.Component {
             <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() =>
             { 
               // append followup question if there are any
-              for (var i = 0; i < currentAnswers.length; i++) {
-                var answer = currentAnswers[i];
-                if (answer.Followup != null) {
-                  this.state.SurveyQuestions.splice(this.state.CurrentQuestionIndex + 1, 0, answer.Followup);
-                }
-              }
+              this.checkAndAppendFollowUp(currentAnswers);
               this.loadNextQuestion()
             }
           }/>
           </View>
           );
       }
+      // ======================== A Question In The Middle, Show Back and Next button ========================= //
       else {
         this.state.ViewArray.push(
         <View style={{flex: 1, flexDirection: 'row', justifyContent:'center'}}>
@@ -342,12 +346,7 @@ class SurveyScreen extends React.Component {
           <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() =>
             { 
               // append followup question if there are any
-              for (var i = 0; i < currentAnswers.length; i++) {
-                var answer = currentAnswers[i];
-                if (answer.Followup != null) {
-                  this.state.SurveyQuestions.splice(this.state.CurrentQuestionIndex + 1, 0, answer.Followup);
-                }
-              }
+              this.checkAndAppendFollowUp(currentAnswers);
               this.loadNextQuestion()
             }
           }/>
@@ -358,9 +357,23 @@ class SurveyScreen extends React.Component {
       this.forceUpdate();
     }
 
+    checkAndAppendFollowUp(currentAnswers) {
+      var followUpExists = false;
+      for (var i = 0; i < currentAnswers.length; i++) {
+        var answer = currentAnswers[i];
+        if (answer.Followup != null) {
+          this.state.SurveyQuestions.splice(this.state.CurrentQuestionIndex + 1, 0, answer.Followup);
+          followUpExists = true;
+        }
+      }
+      return followUpExists;
+    }
+
     submitData() {
+
       this.state.IsCheckboxQuestion = false;
       this.state.ShowAlternateQuestion = false;
+      this.state.ShowSlider = false;
       this.state.ViewArray = [];
 
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
@@ -372,7 +385,6 @@ class SurveyScreen extends React.Component {
       //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
       //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
       // }
-      //let data = this.state.Answers;
 
       // Post results
       let data = {
@@ -387,13 +399,11 @@ class SurveyScreen extends React.Component {
         }
       }
 
-      fetch('http://172.20.10.2:3000/projectAPI/' + this.state.Username, data)
+      fetch('https://emad-cits5206-2.herokuapp.com/projectAPI/' + this.state.Username, data)
       .then((response) => response.json())
             .then((responseJson) => {
 
           // ============= on success ============== //
-          alert(JSON.stringify(responseJson));
-
           // Adjust notification time
           this.sendNotification(responseJson.interval);
 
