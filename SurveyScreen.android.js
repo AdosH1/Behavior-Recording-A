@@ -31,10 +31,12 @@ class SurveyScreen extends React.Component {
           [
             {
               Question: "Test question",
-              Type: "slider",
-              SliderMinValue: 0,
-              SliderMaxValue: 200,
-              SliderStepValue: 5,
+              Type: "scale",
+              Answers: [
+                {Answer: 0, Followup: null},
+                {Answer: 200, Followup: null},
+                {Answer: 5, Followup: null},
+              ],
             },
             {
               Question: "What type of weather do you like?",
@@ -70,6 +72,15 @@ class SurveyScreen extends React.Component {
               Question: "Describe how this week went.",
               Type: "text",
               Answers: [],
+            },
+            {
+              Question: "Test question 2",
+              Type: "scale",
+              Answers: [
+                {Answer: -50, Followup: null},
+                {Answer: 50, Followup: null},
+                {Answer: 10, Followup: null},
+              ],
             },
             {
               Question: "Which foods would you like to eat for dinner?",
@@ -146,7 +157,7 @@ class SurveyScreen extends React.Component {
         let answers = [];
         for (var j = 0; j < SQ.content.length; j++) {
           let SQans = SQ.content[j];
-          //alert(SQ.content.length);
+
           // Create list of followups
           let SQFollowupAns = []
           
@@ -205,6 +216,7 @@ class SurveyScreen extends React.Component {
       this.state.IsCheckboxQuestion = false;
       this.state.ShowAlternateQuestion = false;
       this.state.ShowSlider = false;
+      this.state.sliderValue = 0;
 
       if (goBackwards) this.state.CurrentQuestionIndex--;
       else this.state.CurrentQuestionIndex++;
@@ -232,7 +244,6 @@ class SurveyScreen extends React.Component {
         this.state.Answers[currentQuestion.Question] = "";
         this.state.RadioProps = []
 
-        // for (let answer in surveyAnswers) {
         for (var i = 0; i < surveyAnswers.length; i++) {
           let answer = surveyAnswers[i]; 
           let option = answer.Answer;
@@ -272,18 +283,24 @@ class SurveyScreen extends React.Component {
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = "";
 
-        this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1}} defaultValue="" multiline={true} onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
+        this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1, height: this.state.screenHeight / 2.8, textAlignVertical: "top"}} defaultValue="" multiline={true} onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
       }
       // ================================= SLIDER ==================================== //
-      else if (currentQuestion.Type === "slider") {
+      else if (currentQuestion.Type === "scale") {
         this.state.ShowSlider = true;
         this.state.ShowAlternateQuestion = true;
         
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = "";
-        this.state.sliderMinValue = currentQuestion.SliderMinValue;
-        this.state.sliderMaxValue = currentQuestion.SliderMaxValue;
-        this.state.sliderStepValue = currentQuestion.SliderStepValue;
+        for (var i = 0; i < surveyAnswers.length; i++) {
+          let answer = surveyAnswers[i]; 
+          let option = answer.Answer;
+
+          if (i == 0) this.state.sliderMinValue = option;
+          if (i == 1) this.state.sliderMaxValue = option;
+          if (i == 2) this.state.sliderStepValue = option;
+        }
+
         this.state.sliderText = "Value: " + this.state.sliderValue.toString();
 
       }
@@ -350,11 +367,11 @@ class SurveyScreen extends React.Component {
       this.state.ViewArray.push(<Text style={styles.sectionTitle}>Thank you for participating in this survey.</Text>);
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
-      for (var key in this.state.Answers) {
-        var ans = this.state.Answers[key];
-        this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
-        this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
-      }
+      // for (var key in this.state.Answers) {
+      //   var ans = this.state.Answers[key];
+      //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
+      //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
+      // }
       //let data = this.state.Answers;
 
       // Post results
