@@ -79,7 +79,6 @@ class LoginScreen extends React.Component {
       }
     }
 
-
     // ========================= Get server data ========================== //
     fetch('https://emad-cits5206-2.herokuapp.com/user-login', data)
       .then((response) => response.json())
@@ -179,29 +178,12 @@ const styles = StyleSheet.create({
       fontWeight: '600',
       color: '#000',
     },
-    sectionDescription: {
-      marginTop: 8,
-      fontSize: 18,
-      fontWeight: '400',
-      color: '#444',
-    },
     userInput: {
       height: 40, 
       marginVertical: 5,
       borderStyle: 'solid',
       borderWidth: 1,
       borderColor: 'grey',
-    },
-    highlight: {
-      fontWeight: '700',
-    },
-    footer: {
-      color: '#444',
-      fontSize: 12,
-      fontWeight: '600',
-      padding: 4,
-      paddingRight: 12,
-      textAlign: 'right',
     },
     errorMsg: {
       color: '#F00',

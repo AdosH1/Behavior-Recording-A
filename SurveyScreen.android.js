@@ -22,89 +22,91 @@ class SurveyScreen extends React.Component {
 
       const { navigation } = this.props;
 
+      var sampleSurveyQuestions = [
+        {
+          Question: "Test question",
+          Type: "scale",
+          Answers: [
+            {Answer: 0, Followup: null},
+            {Answer: 200, Followup: null},
+            {Answer: 5, Followup: null},
+          ],
+        },
+        {
+          Question: "What type of weather do you like?",
+          Type: "multiple",
+          Answers: [
+            {Answer: "Sunny", Followup: null},
+            {Answer: "Gloomy", Followup: null},
+            {Answer: "Windy", Followup: null},
+            {Answer: "Wet", Followup: null},
+            {Answer: "Humid", Followup: null},
+          ]
+        },
+        {
+          Question: "What did you eat for lunch?",
+          Type: "single",
+          Answers: [
+            {Answer: "Hamburger", Followup: null},
+            {Answer: "Salad", Followup: null},
+            {Answer: "Tacos", Followup:
+              {
+                Question: "Did you enjoy the taco?",
+                Type: "single",
+                Answers: [
+                  {Answer: "No", Followup: null},
+                  {Answer: "Maybe", Followup: null},
+                  {Answer: "Absolutely", Followup: null},
+                ]
+              }
+            }
+          ]
+        },
+        {
+          Question: "Describe how this week went.",
+          Type: "text",
+          Answers: [],
+        },
+        {
+          Question: "Test question 2",
+          Type: "scale",
+          Answers: [
+            {Answer: -50, Followup: null},
+            {Answer: 50, Followup: null},
+            {Answer: 10, Followup: null},
+          ],
+        },
+        {
+          Question: "Which foods would you like to eat for dinner?",
+          Type: "multiple",
+          Answers: [
+            {Answer: "Sushi", Followup: null},
+            {Answer: "Steak", Followup: null},
+            {Answer: "Fish and Chips", Followup: null},
+            {Answer: "Avo' on Toast", Followup: null},
+            {Answer: "Salad", Followup: null},
+          ]
+        },
+      ];
+
       this.state = 
       {
         ViewArray: [],
         CurrentQuestionIndex: -1,
         CurrentQuestion: "",
-        SurveyQuestions: 
-          [
-            {
-              Question: "Test question",
-              Type: "scale",
-              Answers: [
-                {Answer: 0, Followup: null},
-                {Answer: 200, Followup: null},
-                {Answer: 5, Followup: null},
-              ],
-            },
-            {
-              Question: "What type of weather do you like?",
-              Type: "multiple",
-              Answers: [
-                {Answer: "Sunny", Followup: null},
-                {Answer: "Gloomy", Followup: null},
-                {Answer: "Windy", Followup: null},
-                {Answer: "Wet", Followup: null},
-                {Answer: "Humid", Followup: null},
-              ]
-            },
-            {
-              Question: "What did you eat for lunch?",
-              Type: "single",
-              Answers: [
-                {Answer: "Hamburger", Followup: null},
-                {Answer: "Salad", Followup: null},
-                {Answer: "Tacos", Followup:
-                  {
-                    Question: "Did you enjoy the taco?",
-                    Type: "single",
-                    Answers: [
-                      {Answer: "No", Followup: null},
-                      {Answer: "Maybe", Followup: null},
-                      {Answer: "Absolutely", Followup: null},
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              Question: "Describe how this week went.",
-              Type: "text",
-              Answers: [],
-            },
-            {
-              Question: "Test question 2",
-              Type: "scale",
-              Answers: [
-                {Answer: -50, Followup: null},
-                {Answer: 50, Followup: null},
-                {Answer: 10, Followup: null},
-              ],
-            },
-            {
-              Question: "Which foods would you like to eat for dinner?",
-              Type: "multiple",
-              Answers: [
-                {Answer: "Sushi", Followup: null},
-                {Answer: "Steak", Followup: null},
-                {Answer: "Fish and Chips", Followup: null},
-                {Answer: "Avo' on Toast", Followup: null},
-                {Answer: "Salad", Followup: null},
-              ]
-            },
-          ],
+        SurveyQuestions: sampleSurveyQuestions,
         Answers: {
 
         },
-        Checkboxes: [], 
-        CheckboxId: 0, 
+        SurveyTitle: "",
         RadioProps: [],
         screenWidth: Dimensions.get('window').width,
         screenHeight: Dimensions.get('window').height,
         ShowAlternateQuestion: false,
         // ============ Checkbox ========== //
         IsCheckboxQuestion: true,
+        Checkboxes: [], 
+        CheckboxId: 0, 
         ShowCheckboxes: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, ],
         CheckboxText: ["", "","","","","","","","","","","","","","","","","","","",],
         Username: "",
@@ -149,6 +151,7 @@ class SurveyScreen extends React.Component {
     convertServerDataToSurvey(serverData) {
       // Clear default survey questions
       this.state.SurveyQuestions = [];
+      this.state.SurveyTitle = serverData.title;
 
       for (var i = 0; i < serverData.questions.length; i++) {
         let SQ = serverData.questions[i];
@@ -296,10 +299,11 @@ class SurveyScreen extends React.Component {
           let answer = surveyAnswers[i]; 
           let option = answer.Answer;
 
-          if (i == 0) this.state.sliderMinValue = option;
-          if (i == 1) this.state.sliderMaxValue = option;
-          if (i == 2) this.state.sliderStepValue = option;
+          if (i == 0) this.state.sliderMinValue = parseFloat(option);
+          if (i == 1) this.state.sliderMaxValue = parseFloat(option);
+          if (i == 2) this.state.sliderStepValue = parseFloat(option);
         }
+        this.state.sliderValue = this.state.sliderMinValue;
 
         this.state.sliderText = "Value: " + this.state.sliderValue.toString();
 
@@ -380,17 +384,22 @@ class SurveyScreen extends React.Component {
       this.state.ViewArray.push(<Text style={styles.sectionTitle}>Thank you for participating in this survey.</Text>);
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
-      // for (var key in this.state.Answers) {
-      //   var ans = this.state.Answers[key];
-      //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
-      //   this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
-      // }
+      let result = []
+
+      for (var key in this.state.Answers) {
+        var ans = this.state.Answers[key];
+
+        let answer = { stitle: this.state.SurveyTitle, qtitle: key, answer: ans };
+        result.push(answer);
+        //this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
+        //this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
+      }
 
       // Post results
       let data = {
         method: 'POST',
         body: JSON.stringify({
-            data: this.state.Answers,
+            result: result,
             username: this.state.Username,
         }),
         headers: {
@@ -557,14 +566,6 @@ const styles = StyleSheet.create({
       backgroundColor: '#FFF',
       textAlignVertical: 'center'
     },
-    sectionContainer: {
-      marginTop: 32,
-      paddingHorizontal: 24,
-      padding: 10,
-      flex: 1,
-      flexDirection: 'column',
-      justifyContent: 'space-between'
-    },
     sectionTitle: {
       fontSize: 20,
       fontWeight: '600',
@@ -577,23 +578,6 @@ const styles = StyleSheet.create({
       fontSize: 18,
       fontWeight: '400',
       color: '#444',
-    },
-    userInput: {
-      height: 40, 
-      borderStyle: 'solid',
-      borderWidth: 1,
-      borderColor: 'grey',
-    },
-    highlight: {
-      fontWeight: '700',
-    },
-    footer: {
-      color: '#444',
-      fontSize: 12,
-      fontWeight: '600',
-      padding: 4,
-      paddingRight: 12,
-      textAlign: 'right',
     },
     checkboxStyle: {
       flex: 1, 

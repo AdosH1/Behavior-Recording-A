@@ -1,14 +1,11 @@
-import { Platform } from 'react-native';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import LoginScreen from './LoginScreen';
 import SurveyScreen from './SurveyScreen';
-import ThankyouScreen from './ThankyouScreen'
 
 const MainNavigator = createStackNavigator({
   Login:  LoginScreen,
   Survey:  SurveyScreen,
-  Thankyou:  ThankyouScreen,
 });
 
 const App = createAppContainer(MainNavigator);
