@@ -81,8 +81,9 @@ class LoginScreen extends React.Component {
 
     // ========================= Get server data ========================== //
     fetch('https://emad-cits5206-2.herokuapp.com/user-login', data)
+    //fetch('http://192.168.31.244:3000/user-login', data)
       .then((response) => response.json())
-            .then((responseJson) => {
+        .then((responseJson) => {
 
           // ============= on success ============== //
           // Remember recredentials
@@ -101,12 +102,12 @@ class LoginScreen extends React.Component {
           this.props.navigation.push('Survey', {serverData: responseJson, username: this.state.username});
 
         }).catch((error) => {
-          // ============= on failure ============== //
-          this.state.error = true;
-          this.forceUpdate();
+        // ============= on failure ============== //
+        this.state.error = true;
+        this.forceUpdate();
 
-          console.error(error);
-      });
+        console.error(error);
+    });
 
   }
   

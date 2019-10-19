@@ -261,7 +261,7 @@ class SurveyScreen extends React.Component {
             buttonColor={'#333333'}
             animation={true}
             radio_props={this.state.RadioProps}
-            initial={0}
+            initial={-1}
             onPress={(value) => {
               this.setState({value: value}); 
               this.state.Answers[currentQuestion.Question] = value;
@@ -391,8 +391,6 @@ class SurveyScreen extends React.Component {
 
         let answer = { stitle: this.state.SurveyTitle, qtitle: key, answer: ans };
         result.push(answer);
-        //this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
-        //this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
       }
 
       // Post results
@@ -407,8 +405,10 @@ class SurveyScreen extends React.Component {
             'Content-Type': 'application/json',
         }
       }
+      
 
       fetch('https://emad-cits5206-2.herokuapp.com/projectAPI/' + this.state.Username, data)
+      //fetch('http://192.168.31.244:3000/projectAPI/' + this.state.Username, data)
       .then((response) => response.json())
             .then((responseJson) => {
 
