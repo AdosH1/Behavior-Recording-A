@@ -12,7 +12,6 @@ import {
     Switch,
     PushNotificationIOS,
   } from 'react-native';
-var PushNotification = require("react-native-push-notification");
 import {  Divider, Button, Slider } from 'react-native-elements';
 import RadioForm from 'react-native-simple-radio-button';
 import RNRestart from 'react-native-restart'; 
@@ -127,27 +126,9 @@ class SurveyScreen extends React.Component {
 
     componentDidMount() {
 
-      PushNotificationIOS.configure({
-        // (optional) Called when Token is generated (iOS and Android)
-        onRegister: function(token) {
-          console.log("TOKEN:", token);
-        },
-        // (required) Called when a remote or local notification is opened or received
-        onNotification: function(notification) {
-          RNRestart.Restart();
-          //console.log("NOTIFICATION:", notification);
-        },
-        // Should the initial notification be popped automatically
-        // default: true
-        popInitialNotification: true,
-        /**
-         * (optional) default: true
-         * - Specified if permissions (ios) and token (android and ios) will requested or not,
-         * - if not, you must call PushNotificationsHandler.requestPermissions() later
-         */
-        requestPermissions: true
+      PushNotificationIOS.addEventListener('localNotification', function(){
+        RNRestart.Restart();
       });
-
 
       this.loadNextQuestion();
     }
