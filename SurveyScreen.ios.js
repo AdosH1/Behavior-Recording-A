@@ -10,10 +10,10 @@ import {
     TextInput,
     Dimensions,
     Switch,
-    PushNotificationIOS
+    PushNotificationIOS,
   } from 'react-native';
 var PushNotification = require("react-native-push-notification");
-import {  Divider, Button } from 'react-native-elements';
+import {  Divider, Button, Slider } from 'react-native-elements';
 import RadioForm from 'react-native-simple-radio-button';
 import RNRestart from 'react-native-restart'; 
 
@@ -22,81 +22,112 @@ class SurveyScreen extends React.Component {
       super(props);
 
       const { navigation } = this.props;
-      alert(JSON.stringify(navigation.getParam('serverData', 'Unable to find server data.')))
+
+      var sampleSurveyQuestions = [
+        {
+          Question: "Test question",
+          Type: "scale",
+          Answers: [
+            {Answer: 0, Followup: null},
+            {Answer: 200, Followup: null},
+            {Answer: 5, Followup: null},
+          ],
+        },
+        {
+          Question: "What type of weather do you like?",
+          Type: "multiple",
+          Answers: [
+            {Answer: "Sunny", Followup: null},
+            {Answer: "Gloomy", Followup: null},
+            {Answer: "Windy", Followup: null},
+            {Answer: "Wet", Followup: null},
+            {Answer: "Humid", Followup: null},
+          ]
+        },
+        {
+          Question: "What did you eat for lunch?",
+          Type: "single",
+          Answers: [
+            {Answer: "Hamburger", Followup: null},
+            {Answer: "Salad", Followup: null},
+            {Answer: "Tacos", Followup:
+              {
+                Question: "Did you enjoy the taco?",
+                Type: "single",
+                Answers: [
+                  {Answer: "No", Followup: null},
+                  {Answer: "Maybe", Followup: null},
+                  {Answer: "Absolutely", Followup: null},
+                ]
+              }
+            }
+          ]
+        },
+        {
+          Question: "Describe how this week went.",
+          Type: "text",
+          Answers: [],
+        },
+        {
+          Question: "Test question 2",
+          Type: "scale",
+          Answers: [
+            {Answer: -50, Followup: null},
+            {Answer: 50, Followup: null},
+            {Answer: 10, Followup: null},
+          ],
+        },
+        {
+          Question: "Which foods would you like to eat for dinner?",
+          Type: "multiple",
+          Answers: [
+            {Answer: "Sushi", Followup: null},
+            {Answer: "Steak", Followup: null},
+            {Answer: "Fish and Chips", Followup: null},
+            {Answer: "Avo' on Toast", Followup: null},
+            {Answer: "Salad", Followup: null},
+          ]
+        },
+      ];
 
       this.state = 
       {
         ViewArray: [],
         CurrentQuestionIndex: -1,
         CurrentQuestion: "",
-        SurveyQuestions: 
-          [
-            {
-              Question: "What type of weather do you like?",
-              Type: "checkbox",
-              Answers: [
-                {Answer: "Sunny", Followup: null},
-                {Answer: "Gloomy", Followup: null},
-                {Answer: "Windy", Followup: null},
-                {Answer: "Wet", Followup: null},
-                {Answer: "Humid", Followup: null},
-              ]
-            },
-            {
-              Question: "What did you eat for lunch?",
-              Type: "button",
-              Answers: [
-                {Answer: "Hamburger", Followup: null},
-                {Answer: "Salad", Followup: null},
-                {Answer: "Tacos", Followup:
-                  {
-                    Question: "Did you enjoy the taco?",
-                    Type: "button",
-                    Answers: [
-                      {Answer: "No", Followup: null},
-                      {Answer: "Maybe", Followup: null},
-                      {Answer: "Absolutely", Followup: null},
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              Question: "Describe how this week went.",
-              Type: "text",
-              Answers: [],
-            },
-            {
-              Question: "Which foods would you like to eat for dinner?",
-              Type: "checkbox",
-              Answers: [
-                {Answer: "Sushi", Followup: null},
-                {Answer: "Steak", Followup: null},
-                {Answer: "Fish and Chips", Followup: null},
-                {Answer: "Avo' on Toast", Followup: null},
-                {Answer: "Salad", Followup: null},
-              ]
-            },
-          ],
+        SurveyQuestions: sampleSurveyQuestions,
         Answers: {
 
         },
-        Checkboxes: [], 
-        CheckboxId: 0, 
+        SurveyTitle: "",
         RadioProps: [],
         screenWidth: Dimensions.get('window').width,
         screenHeight: Dimensions.get('window').height,
+        ShowAlternateQuestion: false,
+        // ============ Checkbox ========== //
         IsCheckboxQuestion: true,
+        Checkboxes: [], 
+        CheckboxId: 0, 
         ShowCheckboxes: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, ],
         CheckboxText: ["", "","","","","","","","","","","","","","","","","","","",],
+        Username: "",
+        // ============ Slider ============ //
+        ShowSlider: false,
+        sliderText: "",
+        sliderMinValue: 0,
+        sliderMaxValue: 100,
+        sliderStepValue: 20,
+        sliderValue: 5,
       };
       
+      this.convertServerDataToSurvey(navigation.getParam('serverData', 'Unable to find server data.'));
+      this.state.Username = navigation.getParam('username', 'Unable to find user data');
+      PushNotificationIOS.requestPermissions();
     }
 
     componentDidMount() {
-      PushNotificationIOS.requestPermissions();
 
-      PushNotification.configure({
+      PushNotificationIOS.configure({
         // (optional) Called when Token is generated (iOS and Android)
         onRegister: function(token) {
           console.log("TOKEN:", token);
@@ -104,6 +135,7 @@ class SurveyScreen extends React.Component {
         // (required) Called when a remote or local notification is opened or received
         onNotification: function(notification) {
           RNRestart.Restart();
+          //console.log("NOTIFICATION:", notification);
         },
         // Should the initial notification be popped automatically
         // default: true
@@ -116,23 +148,80 @@ class SurveyScreen extends React.Component {
         requestPermissions: true
       });
 
+
       this.loadNextQuestion();
     }
 
-    sendNotification() {
-      setTimeout(function() {
-          PushNotificationIOS.presentLocalNotification({ alertBody: "Test Push Notification Function", alertAction: "view" });
-      }, 10000);
-      PushNotification.localNotificationSchedule({
-        //... You can use all the options from localNotifications
-        message: "A survey is ready to be taken!", // (required)
-        date: new Date(Date.now() + 10 * 1000) // in 60 secs
-      });
+    convertServerDataToSurvey(serverData) {
+      // Clear default survey questions
+      this.state.SurveyQuestions = [];
+      this.state.SurveyTitle = serverData.title;
+
+      for (var i = 0; i < serverData.questions.length; i++) {
+        let SQ = serverData.questions[i];
+
+        // Create list of answers
+        let answers = [];
+        for (var j = 0; j < SQ.content.length; j++) {
+          let SQans = SQ.content[j];
+
+          // Create list of followups
+          let SQFollowupAns = []
+          
+          let hasFollowup = SQans.followUp.title != null;
+          if (hasFollowup) {
+            if (SQans.followUp.type == "text") {
+
+            }
+            else {
+              for (var k = 0; k < SQans.followUp.content.length; k++) {
+                let SQFollowup = SQans.followUp.content[k];
+                let followUpAns = {
+                  Answer: SQFollowup.title,
+                  Followup: null
+                }
+                SQFollowupAns.push(followUpAns);
+              }
+            }
+         }
+
+          let SQFollowup = hasFollowup ? {
+            Question: SQans.followUp.title,
+            Type: SQans.followUp.type,
+            Answers: SQFollowupAns
+          } : null;
+
+          // =======================================
+          let ansObj = {
+            Answer: SQans.title,
+            Followup: SQFollowup
+          }
+
+          answers.push(ansObj);
+        }
+
+        let SurveyQuestion = { 
+          Question: SQ.title,
+          Type: SQ.type,
+          Answers: answers
+         };
+        this.state.SurveyQuestions.push(SurveyQuestion);
+      }
+
+    }
+
+    sendNotification(seconds) {
+        setTimeout(function() {
+            PushNotificationIOS.presentLocalNotification({ alertBody: "A survey is ready to be taken!", alertAction: "view" });
+        }, seconds * 1000);
     }
 
     loadNextQuestion(goBackwards = false) {
       this.state.ViewArray = []
       this.state.IsCheckboxQuestion = false;
+      this.state.ShowAlternateQuestion = false;
+      this.state.ShowSlider = false;
+      this.state.sliderValue = 0;
 
       if (goBackwards) this.state.CurrentQuestionIndex--;
       else this.state.CurrentQuestionIndex++;
@@ -144,22 +233,22 @@ class SurveyScreen extends React.Component {
       let surveyAnswers = currentQuestion.Answers;
 
       // ================================= CHECKBOXES ==================================== //
-      if (currentQuestion.Type === "checkbox") { 
+      if (currentQuestion.Type === "multiple") { 
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = [];
         this.state.IsCheckboxQuestion = true;
+        this.state.ShowAlternateQuestion = true;
 
         this.constructCheckboxes(surveyAnswers);
       }
       // ================================= BUTTONS ==================================== //
-      else if (currentQuestion.Type === "button") {
+      else if (currentQuestion.Type === "single") {
         this.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
         
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = "";
         this.state.RadioProps = []
 
-        // for (let answer in surveyAnswers) {
         for (var i = 0; i < surveyAnswers.length; i++) {
           let answer = surveyAnswers[i]; 
           let option = answer.Answer;
@@ -174,7 +263,7 @@ class SurveyScreen extends React.Component {
             buttonColor={'#333333'}
             animation={true}
             radio_props={this.state.RadioProps}
-            initial={0}
+            initial={-1}
             onPress={(value) => {
               this.setState({value: value}); 
               this.state.Answers[currentQuestion.Question] = value;
@@ -199,20 +288,48 @@ class SurveyScreen extends React.Component {
         // Create answer entry
         this.state.Answers[currentQuestion.Question] = "";
 
-        this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1}} defaultValue="" multiline={true} onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
+        this.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1, height: this.state.screenHeight / 2.8, textAlignVertical: "top"}} defaultValue="" multiline={true} onChangeText={(text) => this.state.Answers[currentQuestion.Question] = text} />)
+      }
+      // ================================= SLIDER ==================================== //
+      else if (currentQuestion.Type === "scale") {
+        this.state.ShowSlider = true;
+        this.state.ShowAlternateQuestion = true;
+        
+        // Create answer entry
+        this.state.Answers[currentQuestion.Question] = "";
+        for (var i = 0; i < surveyAnswers.length; i++) {
+          let answer = surveyAnswers[i]; 
+          let option = answer.Answer;
+
+          if (i == 0) this.state.sliderMinValue = parseFloat(option);
+          if (i == 1) this.state.sliderMaxValue = parseFloat(option);
+          if (i == 2) this.state.sliderStepValue = parseFloat(option);
+        }
+        this.state.sliderValue = this.state.sliderMinValue;
+
+        this.state.sliderText = "Value: " + this.state.sliderValue.toString();
+
       }
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
 
        // ================================= LOAD NEXT / BACK BUTTONS ==================================== //
+       // ======================== Last Question, Show Submit Button ========================= //
       if (this.state.CurrentQuestionIndex == this.state.SurveyQuestions.length - 1) {
         this.state.ViewArray.push(
           <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
              <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => this.loadNextQuestion(true)}/>
-            <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => this.submitData()}/>
+            <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() => {
+              if(this.checkAndAppendFollowUp(currentAnswers)) {
+                this.loadNextQuestion();
+              } else {
+              this.submitData();
+              }
+              }} />
           </View>
           );
       }
+      // ======================== First Question, No Back Button ========================= //
       else if (this.state.CurrentQuestionIndex == 0) {
         this.state.ViewArray.push(
           <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
@@ -220,18 +337,14 @@ class SurveyScreen extends React.Component {
             <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() =>
             { 
               // append followup question if there are any
-              for (var i = 0; i < currentAnswers.length; i++) {
-                var answer = currentAnswers[i];
-                if (answer.Followup != null) {
-                  this.state.SurveyQuestions.splice(this.state.CurrentQuestionIndex + 1, 0, answer.Followup);
-                }
-              }
+              this.checkAndAppendFollowUp(currentAnswers);
               this.loadNextQuestion()
             }
           }/>
           </View>
           );
       }
+      // ======================== A Question In The Middle, Show Back and Next button ========================= //
       else {
         this.state.ViewArray.push(
         <View style={{flex: 1, flexDirection: 'row', justifyContent:'center'}}>
@@ -239,12 +352,7 @@ class SurveyScreen extends React.Component {
           <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: this.state.screenWidth / 2.2}} onPress={() =>
             { 
               // append followup question if there are any
-              for (var i = 0; i < currentAnswers.length; i++) {
-                var answer = currentAnswers[i];
-                if (answer.Followup != null) {
-                  this.state.SurveyQuestions.splice(this.state.CurrentQuestionIndex + 1, 0, answer.Followup);
-                }
-              }
+              this.checkAndAppendFollowUp(currentAnswers);
               this.loadNextQuestion()
             }
           }/>
@@ -255,21 +363,66 @@ class SurveyScreen extends React.Component {
       this.forceUpdate();
     }
 
+    checkAndAppendFollowUp(currentAnswers) {
+      var followUpExists = false;
+      for (var i = 0; i < currentAnswers.length; i++) {
+        var answer = currentAnswers[i];
+        if (answer.Followup != null) {
+          this.state.SurveyQuestions.splice(this.state.CurrentQuestionIndex + 1, 0, answer.Followup);
+          followUpExists = true;
+        }
+      }
+      return followUpExists;
+    }
+
     submitData() {
+
       this.state.IsCheckboxQuestion = false;
+      this.state.ShowAlternateQuestion = false;
+      this.state.ShowSlider = false;
       this.state.ViewArray = [];
 
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
       this.state.ViewArray.push(<Text style={styles.sectionTitle}>Thank you for participating in this survey.</Text>);
       this.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
 
+      let result = []
+
       for (var key in this.state.Answers) {
         var ans = this.state.Answers[key];
-        this.state.ViewArray.push(<Text style={styles.sectionDescription}>{key}</Text>);
-        this.state.ViewArray.push(<Text style={styles.sectionDescription}>{ans}</Text>);
+
+        let answer = { stitle: this.state.SurveyTitle, qtitle: key, answer: ans };
+        result.push(answer);
       }
 
-      this.sendNotification();
+      // Post results
+      let data = {
+        method: 'POST',
+        body: JSON.stringify({
+            result: result,
+            username: this.state.Username,
+        }),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+      }
+      
+
+      fetch('https://emad-cits5206-2.herokuapp.com/projectAPI/' + this.state.Username, data)
+      //fetch('http://192.168.31.244:3000/projectAPI/' + this.state.Username, data)
+      .then((response) => response.json())
+            .then((responseJson) => {
+
+          // ============= on success ============== //
+          // Adjust notification time
+          this.sendNotification(responseJson.interval);
+
+        }).catch((error) => {
+          // ============= on failure ============== //
+          alert(error);
+      });
+
       this.forceUpdate();
     }
 
@@ -316,10 +469,19 @@ class SurveyScreen extends React.Component {
           else {
             answer += (", " + this.state.Checkboxes[i].option);
           }
+
         }
       }
 
       this.state.Answers[this.state.CurrentQuestion] = answer;
+    }
+
+    updateSlider(value) {
+      this.state.sliderValue = value; 
+
+      this.state.sliderText = "Value: " + this.state.sliderValue.toString();
+      this.state.Answers[this.state.CurrentQuestion] = this.state.sliderValue.toString();
+      this.forceUpdate();
     }
 
     checkboxChanged(index, value) {
@@ -344,7 +506,8 @@ class SurveyScreen extends React.Component {
     
                   <View style={{ height: 50, }}></View>
                   <View style={styles.body}>
-                  {this.state.IsCheckboxQuestion? <Text style={styles.sectionTitle}>{this.state.CurrentQuestion}</Text> : null}
+                  {this.state.ShowAlternateQuestion ? <Text style={styles.sectionTitle}>{this.state.CurrentQuestion}</Text> : null}
+
                   {this.state.IsCheckboxQuestion? 
                       <View style={{flex: 1, flexDirection: 'column', justifyContent:'center'}}>
                         {this.state.ShowCheckboxes[0] ?  <View style={styles.checkboxStyle}><Switch onValueChange={(value) => {this.checkboxChanged(0, value)}} value={this.state.Checkboxes[0].checked}/><Text>{this.state.CheckboxText[0]}</Text></View> : null }
@@ -370,6 +533,19 @@ class SurveyScreen extends React.Component {
                         
                       </View> : null
                     }
+
+                  {this.state.ShowSlider? 
+                    <View style={{marginHorizontal: 20, marginVertical: 5}}>
+                      <Slider 
+                        value={this.state.sliderValue}
+                        onValueChange={(value) => { this.updateSlider(value); }}
+                        minimumValue={this.state.sliderMinValue}
+                        maximumValue={this.state.sliderMaxValue}
+                        step={this.state.sliderStepValue}/>
+                      <Text>{this.state.sliderText}</Text>
+                    </View> : null 
+                  }
+
                     {this.state.ViewArray.map(info => info)}
                   </View>
                   <View style={{ height: 50, }}></View>
@@ -392,14 +568,6 @@ const styles = StyleSheet.create({
       backgroundColor: '#FFF',
       textAlignVertical: 'center'
     },
-    sectionContainer: {
-      marginTop: 32,
-      paddingHorizontal: 24,
-      padding: 10,
-      flex: 1,
-      flexDirection: 'column',
-      justifyContent: 'space-between'
-    },
     sectionTitle: {
       fontSize: 20,
       fontWeight: '600',
@@ -412,23 +580,6 @@ const styles = StyleSheet.create({
       fontSize: 18,
       fontWeight: '400',
       color: '#444',
-    },
-    userInput: {
-      height: 40, 
-      borderStyle: 'solid',
-      borderWidth: 1,
-      borderColor: 'grey',
-    },
-    highlight: {
-      fontWeight: '700',
-    },
-    footer: {
-      color: '#444',
-      fontSize: 12,
-      fontWeight: '600',
-      padding: 4,
-      paddingRight: 12,
-      textAlign: 'right',
     },
     checkboxStyle: {
       flex: 1, 

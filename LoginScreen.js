@@ -81,7 +81,6 @@ class LoginScreen extends React.Component {
 
     // ========================= Get server data ========================== //
     fetch('https://emad-cits5206-2.herokuapp.com/user-login', data)
-    //fetch('http://192.168.31.244:3000/user-login', data)
       .then((response) => response.json())
         .then((responseJson) => {
 
