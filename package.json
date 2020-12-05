@@ -8,12 +8,12 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "acorn": "^6.0.0",
+    "acorn": "^6.4.2",
     "prop-types": "^15.7.2",
     "react": "16.8.6",
     "react-dom": "^16.9.0",
     "react-multiselect-checkboxes": "^0.1.1",
-    "react-native": "0.60.5",
+    "react-native": "^0.63.3",
     "react-native-elements": "^1.1.0",
     "react-native-gesture-handler": "^1.4.1",
     "react-native-push-notification": "^3.1.9",

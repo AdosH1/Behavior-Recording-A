@@ -1,3 +1,4 @@
+import { SurveyScreenShared } from './SurveyScreenShared.js';
 import React, {Fragment} from 'react';
 import {
     SafeAreaView,
@@ -12,6 +13,7 @@ import {
     Switch,
   } from 'react-native';
 import { withNavigation } from 'react-navigation';
+
 
 
 class LoginScreen extends React.Component {
@@ -31,6 +33,7 @@ class LoginScreen extends React.Component {
   componentDidMount() {
     // load previous credentials if exists
     this.loadPreviousCredentials();
+    SurveyScreenShared.test();
   }
 
   async storeCredentials(user) {
@@ -65,6 +68,10 @@ class LoginScreen extends React.Component {
 
 
   login() {
+
+    var obj = {};
+    this.props.navigation.push('Survey', {serverData: obj, username: "ados"});
+    return;
 
     // User data query
     let data = {
