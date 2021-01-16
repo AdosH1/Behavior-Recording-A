@@ -391,22 +391,32 @@ export const SurveyScreenShared =
                   // If theres no next question locally
                   if ((context.state.CurrentQuestionIndex + 1) === context.state.SurveyQuestions.length)  {
 
-                    let hasFollowup = await this.getFollowupQuestion(context, currentAnswers);
-                    console.log("Has followup question: " + hasFollowup);
-                    if (hasFollowup) {
+                    let GFQresponse = await this.getFollowupQuestion(context, currentAnswers);
+                    console.log("Has followup question: " + GFQresponse.hasFollowup);
+                    if (GFQresponse.hasFollowup) {
                       this.loadNextQuestion(context, context.state);
                     }
                     else {
-                      console.log("Looking for next question");
-                      // find next question
-                      let hasNextQuestion = await this.getNextQuestion(context);
-                      console.log("Has next question: " + hasNextQuestion);
-                      if (hasNextQuestion) {
-                        this.loadNextQuestion(context, context.state);
+
+                      if (GFQresponse.msg == "Timer has started.") {
+                        console.log("Has follow up, timer started");
+                        console.log("Submitting data...");
+                        this.submitData(context, GFQresponse.msg);
                       }
                       else {
-                        this.submitData(context);
+                        // find next question
+                        console.log("Looking for next question");
+                        let GNGQresponse = await this.getNextQuestion(context); 
+                        console.log("Has next question: " + GNGQresponse.hasNextQuestion);
+                        if (GNGQresponse.hasNextQuestion) {
+                          this.loadNextQuestion(context, context.state);
+                        }
+                        else {
+                          console.log("Submitting data...");
+                          this.submitData(context, GNGQresponse.msg);
+                        }
                       }
+                      
                     }
 
                   }
@@ -432,23 +442,32 @@ export const SurveyScreenShared =
                   if ((context.state.CurrentQuestionIndex + 1) === context.state.SurveyQuestions.length)  {
                   //if (typeof context.state.SurveyQuestions[context.state.CurrentQuestionIndex + 1] === undefined) {
 
-                    let hasFollowup = await this.getFollowupQuestion(context, currentAnswers);
-                    console.log("Has followup question: " + hasFollowup);
-                    if (hasFollowup) {
+                    let GFQresponse = await this.getFollowupQuestion(context, currentAnswers);
+                    console.log("Has followup question: " + GFQresponse.hasFollowup);
+                    if (GFQresponse.hasFollowup) {
                       this.loadNextQuestion(context, context.state);
                     }
                     else {
-                      // find next question
-                      console.log("Looking for next question");
-                      let hasNextQuestion = await this.getNextQuestion(context);
-                      console.log("Has next question: " + hasNextQuestion);
-                      if (hasNextQuestion) {
-                        this.loadNextQuestion(context, context.state);
+
+                      if (GFQresponse.msg == "Timer has started.") {
+                        console.log("Has follow up, timer started");
+                        console.log("Submitting data...");
+                        this.submitData(context, GNGQresponse.msg);
                       }
                       else {
-                        console.log("Submitting data...");
-                        this.submitData(context);
+                        // find next question
+                        console.log("Looking for next question");
+                        let GNGQresponse = await this.getNextQuestion(context); 
+                        console.log("Has next question: " + GNGQresponse.hasNextQuestion);
+                        if (GNGQresponse.hasNextQuestion) {
+                          this.loadNextQuestion(context, context.state);
+                        }
+                        else {
+                          console.log("Submitting data...");
+                          this.submitData(context, GNGQresponse.msg);
+                        }
                       }
+                      
                     }
                   }
                   else {
@@ -496,18 +515,22 @@ export const SurveyScreenShared =
 
       if (followup === undefined || followup.FollowUp === undefined) return false;
 
-      let urlstring = 'http://emad-uwa5206.herokuapp.com/getFollowUp/' + 'test' + "/" + followup.FollowUp; // context.state.Username
-      //let urlstring = 'http://192.168.20.9:3000/getFollowUp/' + 'test'  + followup.FollowUp; // context.state.Username
+      //let urlstring = 'http://emad-uwa5206.herokuapp.com/getFollowUp/' + context.state.Username + "/" + followup.FollowUp; 
+
+      let urlstring = 'http://192.168.20.9:3000/getFollowUp/' + context.state.Username + "/" + followup.FollowUp;  
         console.log("Url Answer Followup: " + urlstring);
 
       try {
-        let response = await fetch(urlstring);
+        let data = {
+          method: 'POST'
+        };
+        let response = await fetch(urlstring, data);
         if(response.ok) {
           let responseJson = await response.json();
-          if (responseJson.msg == "Timer has started") {
+          if (responseJson.msg == "Timer has started.") {
             // thank someone for survey
             console.log("Timer has started");
-            return false;
+            return {hasFollowup: false, msg: responseJson.msg};
           }
           // =========== THERE IS A FOLLOWUP FOR NEXT QUESTION
           else if (responseJson != null) {
@@ -518,11 +541,11 @@ export const SurveyScreenShared =
             context.state.SurveyQuestions.splice(context.state.CurrentQuestionIndex + 1, 0, newQ);
             console.log("Survey Question at current index: " + context.state.SurveyQuestions[context.state.CurrentQuestionIndex]);
 
-            return true;
+            return {hasFollowup: true, msg: responseJson.msg};
           }
           else {
             console.log("error occurred in check and append followup")
-            return false;
+            return {hasFollowup: false, msg: responseJson.msg};
           }
         } else {
           console.log("HTTP Error" + response.status);
@@ -543,8 +566,8 @@ export const SurveyScreenShared =
       let data = {
         method: 'POST',
       }
-      let urlstring = 'http://emad-uwa5206.herokuapp.com/surveyAPI/' + 'test'; // context.state.Username
-      //let urlstring = 'http://192.168.20.9:3000/surveyAPI/' + 'test'; // context.state.Username
+      //let urlstring = 'http://emad-uwa5206.herokuapp.com/surveyAPI/' + context.state.Username;
+      let urlstring = 'http://192.168.20.9:3000/surveyAPI/' + context.state.Username;  
       console.log("Url Answer Next Question: " + urlstring);
       try {
         let response = await fetch(urlstring, data);
@@ -552,8 +575,8 @@ export const SurveyScreenShared =
           let responseJson = await response.json();
           if (responseJson.msg == "Timer has started." || responseJson.msg == "You have completed the survey.") {
             // thank someone for survey
-            console.log("Timer has started");
-            return false;
+            console.log(responseJson.msg);
+            return {hasNextQuestion: false, msg: responseJson.msg};
           }
           // =========== THERE IS A NEXT QUESTION
           else if (responseJson != null) {
@@ -564,11 +587,11 @@ export const SurveyScreenShared =
             context.state.SurveyQuestions.splice(context.state.CurrentQuestionIndex + 1, 0, newQ);
             console.log("Survey Question at current index: " + context.state.SurveyQuestions[context.state.CurrentQuestionIndex]);
 
-            return true;
+            return {hasNextQuestion: true, msg: responseJson.msg};
           }
           else {
             console.log("error occurred in getNextQuestion")
-            return false;
+            return {hasNextQuestion: false, msg: responseJson.msg};
           }
         } else {
           console.log("HTTP Error" + response.status);
@@ -655,7 +678,7 @@ export const SurveyScreenShared =
       context.forceUpdate();
     },
 
-    submitData : async function (context) {
+    submitData : async function (context, msg) {
 
       context.state.IsCheckboxQuestion = false;
       context.state.ShowAlternateQuestion = false;
@@ -684,7 +707,7 @@ export const SurveyScreenShared =
         method: 'POST',
         body: JSON.stringify({
             result: result,
-            username: 'test'//context.state.Username,
+            username: context.state.Username,
         }),
         // headers: {
         //     'Accept': 'application/json',
@@ -692,17 +715,22 @@ export const SurveyScreenShared =
         // }
       }
       
-      //let urlstring = 'https://emad-uwa5206.herokuapp.com/diaryAPI/' + 'test/' + context.state.SurveyId;
-      let urlstring = 'https://emad-uwa5206.herokuapp.com/diaryAPI/' + 'test/' + context.state.SurveyId;
+      let type = "";
+      if (msg == "Timer has started.") type = "EOQ";
+      if (msg == "You have completed the survey.") type = "EOS";
+      //let urlstring = 'https://emad-uwa5206.herokuapp.com/diaryAPI/' + context.state.Username + "/" + context.state.SurveyId + "/" + type;
+      let urlstring = 'http://192.168.20.9:3000/diaryAPI/' + context.state.Username + "/" + context.state.SurveyId + "/" + type;
       console.log(urlstring);
 
-      let response = await fetch(urlstring, data); // context.state.Username
-      //fetch('http://192.168.31.244:3000/projectAPI/' + this.state.Username, data)
+      let response = await fetch(urlstring, data); 
 
       if (response.ok) {
 
         let responseJson = await response.json();
         console.log(responseJson);
+
+        if (responseJson.interval !== undefined)
+          context.sendNotification(responseJson.interval);
 
       }
       else {

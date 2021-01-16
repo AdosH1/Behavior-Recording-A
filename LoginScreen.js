@@ -88,8 +88,8 @@ class LoginScreen extends React.Component {
 
     console.log(data);
     // ========================= Get server data ========================== //
-    //fetch('http://192.168.20.9/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
-    fetch('https://emad-uwa5206.herokuapp.com/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
+    fetch('http://192.168.20.9:3000/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
+    //fetch('https://emad-uwa5206.herokuapp.com/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
       .then((response) => response.json())
         .then((responseJson) => {
 

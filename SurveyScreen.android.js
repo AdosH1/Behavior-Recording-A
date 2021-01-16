@@ -31,6 +31,7 @@ class SurveyScreen extends React.Component {
       this.state.SurveyId = serverData.sId;
       this.state.SurveyQuestions = SurveyScreenShared.convertServerDataToSurvey(this, serverData.question);
       this.state.Username = navigation.getParam('username', 'Unable to find user data');
+      console.log("========================= USERNAME: " + this.state.Username);
     }
 
     componentDidMount() {
@@ -153,7 +154,6 @@ class SurveyScreen extends React.Component {
                         minimumTrackTintColor='rgb(252, 228, 149)'
                     />
                     <View style={styles.textCon}>
-                        {console.log("========== CAT ANSWERS LENGTH" + this.state.CatAnswers.length)}
                         { this.state.CatAnswers.length > 0 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 0)}</Text> : null}
                         { this.state.CatAnswers.length > 1 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 1)}</Text> : null}
                         { this.state.CatAnswers.length > 2 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 2)}</Text> : null}
