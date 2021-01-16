@@ -69,9 +69,9 @@ class LoginScreen extends React.Component {
 
   login() {
 
-    var obj = {};
-    this.props.navigation.push('Survey', {serverData: obj, username: "ados"});
-    return;
+    //var obj = {};
+    //this.props.navigation.push('Survey', {serverData: obj, username: "ados"});
+    //return;
 
     // User data query
     let data = {
@@ -86,8 +86,10 @@ class LoginScreen extends React.Component {
       }
     }
 
+    console.log(data);
     // ========================= Get server data ========================== //
-    fetch('https://emad-cits5206-2.herokuapp.com/user-login', data)
+    //fetch('http://192.168.20.9/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
+    fetch('https://emad-uwa5206.herokuapp.com/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
       .then((response) => response.json())
         .then((responseJson) => {
 
@@ -105,6 +107,7 @@ class LoginScreen extends React.Component {
           }
 
           // Go to next screen with data
+          console.log(responseJson);
           this.props.navigation.push('Survey', {serverData: responseJson, username: this.state.username});
 
         }).catch((error) => {
@@ -113,7 +116,8 @@ class LoginScreen extends React.Component {
         this.forceUpdate();
 
         console.error(error);
-    });
+    }
+    );
 
   }
   

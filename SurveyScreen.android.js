@@ -17,14 +17,19 @@ import {  Divider, Button, Slider } from 'react-native-elements';
 import RadioForm from 'react-native-simple-radio-button';
 import RNRestart from 'react-native-restart'; 
 
+import { Notifications } from 'expo';
+import * as Permissions from 'expo-permissions';
+
 class SurveyScreen extends React.Component {
     constructor(props) {
       super(props);
 
       const { navigation } = this.props;
 
-      this.state = SurveyScreenShared.getInitialState(true);
-      //this.state.SurveyQuestions = SurveyScreenShared.convertServerDataToSurvey(navigation.getParam('serverData', 'Unable to find server data.'));
+      this.state = SurveyScreenShared.getInitialState(false);
+      let serverData = navigation.getParam('serverData', 'Unable to find server data.');
+      this.state.SurveyId = serverData.sId;
+      this.state.SurveyQuestions = SurveyScreenShared.convertServerDataToSurvey(this, serverData.question);
       this.state.Username = navigation.getParam('username', 'Unable to find user data');
     }
 
@@ -49,6 +54,23 @@ class SurveyScreen extends React.Component {
          */
         requestPermissions: true
       });
+
+      // Expo push notifications
+      const registerForPushNotifications = async () => { 
+        try {
+           const permission = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+           if (!permission.granted) return;
+           const token = await Notifications.getExpoPushTokenAsync();
+        console.log(token);
+        } catch (error) {
+          console.log('Error getting a token', error);
+        }
+      }
+
+      // const AppNavigator = () => {
+      //   useEffect(() => {
+      //     registerForPushNotifications();
+      //   }, [])
 
       SurveyScreenShared.loadNextQuestion(this, this.state);
     }
@@ -105,16 +127,43 @@ class SurveyScreen extends React.Component {
                       </View> : null
                     }
 
-                  {this.state.ShowSlider? 
+                  {this.state.ShowSlider ? 
                     <View style={{marginHorizontal: 20, marginVertical: 5}}>
                       <Slider 
                         value={this.state.sliderValue}
-                        onValueChange={(value) => { SurveyScreenShared.updateSlider(context, value); }}
+                        onValueChange={(value) => { SurveyScreenShared.updateSlider(this, value); }}
                         minimumValue={this.state.sliderMinValue}
                         maximumValue={this.state.sliderMaxValue}
                         step={this.state.sliderStepValue}/>
                       <Text>{this.state.sliderText}</Text>
                     </View> : null 
+                  }
+
+                  {this.state.ShowCatSlider ? 
+                    <View style={styles.container}>
+                    <Slider
+                        style={{ width: 300}}
+                        step={1}
+                        minimumValue={this.state.catMinValue}
+                        maximumValue={this.state.catMaxValue}
+                        value={this.state.catValue}
+                        onValueChange={val => {SurveyScreenShared.updateCatSlider(this, val); }}
+                        thumbTintColor='rgb(252, 228, 149)'
+                        maximumTrackTintColor='#d3d3d3' 
+                        minimumTrackTintColor='rgb(252, 228, 149)'
+                    />
+                    <View style={styles.textCon}>
+                        {console.log("========== CAT ANSWERS LENGTH" + this.state.CatAnswers.length)}
+                        { this.state.CatAnswers.length > 0 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 0)}</Text> : null}
+                        { this.state.CatAnswers.length > 1 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 1)}</Text> : null}
+                        { this.state.CatAnswers.length > 2 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 2)}</Text> : null}
+                        { this.state.CatAnswers.length > 3 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 3)}</Text> : null}
+                        { this.state.CatAnswers.length > 4 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 4)}</Text> : null}
+                        { this.state.CatAnswers.length > 5 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 5)}</Text> : null}
+                        { this.state.CatAnswers.length > 6 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 6)}</Text> : null}
+                        
+                    </View> 
+                  </View> : null
                   }
 
                     {this.state.ViewArray.map(info => info)}
@@ -158,4 +207,25 @@ const styles = StyleSheet.create({
       marginVertical: 5, 
       marginHorizontal: 20
     },
+
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#fff',
+    },
+    textCon: {
+        width: 320,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20,
+    },
+    colorGrey: {
+        color: '#d3d3d3',
+        transform: [{ rotate: '-90deg'}]
+    },
+    colorYellow: {
+        color: 'rgb(252, 228, 149)',
+        transform: [{ rotate: '-90deg'}]
+    }
   });

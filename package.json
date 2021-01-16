@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "acorn": "^6.4.2",
+    "expo": "^39.0.5",
+    "expo-permissions": "^10.0.0",
     "prop-types": "^15.7.2",
     "react": "16.8.6",
     "react-dom": "^16.9.0",

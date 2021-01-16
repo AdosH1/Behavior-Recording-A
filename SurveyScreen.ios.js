@@ -100,6 +100,33 @@ class SurveyScreen extends React.Component {
                     </View> : null 
                   }
 
+                  {this.state.ShowCatSlider ? 
+                    <View style={styles.container}>
+                    <Slider
+                        style={{ width: 300}}
+                        step={1}
+                        minimumValue={this.state.catMinValue}
+                        maximumValue={this.state.catMaxValue}
+                        value={this.state.catValue}
+                        onValueChange={val => {SurveyScreenShared.updateCatSlider(this, val); }}
+                        thumbTintColor='rgb(252, 228, 149)'
+                        maximumTrackTintColor='#d3d3d3' 
+                        minimumTrackTintColor='rgb(252, 228, 149)'
+                    />
+                    <View style={styles.textCon}>
+                        {console.log("========== CAT ANSWERS LENGTH" + this.state.CatAnswers.length)}
+                        { this.state.CatAnswers.length > 0 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 0)}</Text> : null}
+                        { this.state.CatAnswers.length > 1 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 1)}</Text> : null}
+                        { this.state.CatAnswers.length > 2 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 2)}</Text> : null}
+                        { this.state.CatAnswers.length > 3 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 3)}</Text> : null}
+                        { this.state.CatAnswers.length > 4 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 4)}</Text> : null}
+                        { this.state.CatAnswers.length > 5 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 5)}</Text> : null}
+                        { this.state.CatAnswers.length > 6 ? <Text style={styles.colorGrey}>{SurveyScreenShared.GetCatSliderOption(this, 6)}</Text> : null}
+                        
+                    </View> 
+                  </View> : null
+                  }
+
                     {this.state.ViewArray.map(info => info)}
                   </View>
                   <View style={{ height: 50, }}></View>
@@ -141,4 +168,25 @@ const styles = StyleSheet.create({
       marginVertical: 5, 
       marginHorizontal: 20
     },
+
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#fff',
+    },
+    textCon: {
+        width: 320,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20,
+    },
+    colorGrey: {
+        color: '#d3d3d3',
+        transform: [{ rotate: '-90deg'}]
+    },
+    colorYellow: {
+        color: 'rgb(252, 228, 149)',
+        transform: [{ rotate: '-90deg'}]
+    }
   });

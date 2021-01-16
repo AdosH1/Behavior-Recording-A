@@ -55,6 +55,12 @@ export const SurveyScreenShared =
           sliderMaxValue: 100,
           sliderStepValue: 20,
           sliderValue: 5,
+          // ========== Categorical Slider ======== //
+          ShowCatSlider: false,
+          catMinValue: 0,
+          catMaxValue: 5,
+          catValue: 2,
+          CatAnswers: [],
         };
   },
 
@@ -127,59 +133,48 @@ export const SurveyScreenShared =
       ];
     },
 
-    convertServerDataToSurvey : function(serverData)
+    convertServerDataToSurvey : function(context, serverData)
     {
         // Clear default survey questions
         var SurveyQuestions = [];
+        console.log("============== SERVERDATA ================");
+        console.log(serverData);
+        var sq = this.createQuestion(serverData);
+        SurveyQuestions.push(sq);
+
+        return SurveyQuestions;
+
+        var SurveyId = serverData._id;
         var SurveyTitle = serverData.title;
+        var SurveyType = serverData.type;
+        var SurveyInterval = serverData.interval;
   
-        for (var i = 0; i < serverData.questions.length; i++)
+        for (var i = 0; i < serverData.content.length; i++)
         {
-          let SQ = serverData.questions[i];
+          console.log(serverData.content);
+          let SQ = serverData.content[i];
   
           // Create list of answers
           let answers = [];
-          for (var j = 0; j < SQ.content.length; j++) {
-            let SQans = SQ.content[j];
-  
-            // Create list of followups
-            let SQFollowupAns = []
+          for (var j = 0; j < serverData.content.length; j++) {
             
-            let hasFollowup = SQans.followUp.title != null;
-            if (hasFollowup) {
-              if (SQans.followUp.type == "text") {
-  
-              }
-              else {
-                for (var k = 0; k < SQans.followUp.content.length; k++) {
-                  let SQFollowup = SQans.followUp.content[k];
-                  let followUpAns = {
-                    Answer: SQFollowup.title,
-                    Followup: null
-                  }
-                  SQFollowupAns.push(followUpAns);
-                }
-              }
-           }
-  
-            let SQFollowup = hasFollowup ? {
-              Question: SQans.followUp.title,
-              Type: SQans.followUp.type,
-              Answers: SQFollowupAns
-            } : null;
-  
+            let SQid = SQ._id;
+            let SQans = SQ.title[j];
+
             // =======================================
             let ansObj = {
-              Answer: SQans.title,
-              Followup: SQFollowup
+              Id: SQid,
+              Answer: SQans
             }
   
             answers.push(ansObj);
           }
   
           let SurveyQuestion = { 
-            Question: SQ.title,
-            Type: SQ.type,
+            Id: SurveyId,
+            Interval: SurveyInterval,
+            Question: SurveyTitle,
+            Type: SurveyType,
             Answers: answers
            };
           SurveyQuestions.push(SurveyQuestion);
@@ -188,48 +183,112 @@ export const SurveyScreenShared =
         return SurveyQuestions;
     },
 
-    loadNextQuestion : function(context, state, goBackwards = false) {
-        state.ViewArray = []
-        state.IsCheckboxQuestion = false;
-        state.ShowAlternateQuestion = false;
-        state.ShowSlider = false;
-        state.sliderValue = 0;
+    // convertServerDataToSurvey : function(serverData)
+    // {
+    //     // Clear default survey questions
+    //     var SurveyQuestions = [];
+    //     var SurveyTitle = serverData.title;
+  
+    //     for (var i = 0; i < serverData.questions.length; i++)
+    //     {
+    //       let SQ = serverData.questions[i];
+  
+    //       // Create list of answers
+    //       let answers = [];
+    //       for (var j = 0; j < SQ.content.length; j++) {
+    //         let SQans = SQ.content[j];
+  
+    //         // Create list of followups
+    //         let SQFollowupAns = []
+            
+    //         let hasFollowup = SQans.followUp.title != null;
+    //         if (hasFollowup) {
+    //           if (SQans.followUp.type == "text") {
+  
+    //           }
+    //           else {
+    //             for (var k = 0; k < SQans.followUp.content.length; k++) {
+    //               let SQFollowup = SQans.followUp.content[k];
+    //               let followUpAns = {
+    //                 Answer: SQFollowup.title,
+    //                 Followup: null
+    //               }
+    //               SQFollowupAns.push(followUpAns);
+    //             }
+    //           }
+    //        }
+  
+    //         let SQFollowup = hasFollowup ? {
+    //           Question: SQans.followUp.title,
+    //           Type: SQans.followUp.type,
+    //           Answers: SQFollowupAns
+    //         } : null;
+  
+    //         // =======================================
+    //         let ansObj = {
+    //           Answer: SQans.title,
+    //           Followup: SQFollowup
+    //         }
+  
+    //         answers.push(ansObj);
+    //       }
+  
+    //       let SurveyQuestion = { 
+    //         Question: SQ.title,
+    //         Type: SQ.type,
+    //         Answers: answers
+    //        };
+    //       SurveyQuestions.push(SurveyQuestion);
+    //     }
 
-        if (goBackwards) state.CurrentQuestionIndex--;
-        else state.CurrentQuestionIndex++;
+    //     return SurveyQuestions;
+    // },
 
-        let currentQuestion = state.SurveyQuestions[state.CurrentQuestionIndex];
+    loadNextQuestion : async function(context, state, goBackwards = false) {
+        context.state.ViewArray = []
+        context.state.IsCheckboxQuestion = false;
+        context.state.ShowAlternateQuestion = false;
+        context.state.ShowSlider = false;
+        context.state.sliderValue = 0;
+
+        if (goBackwards) context.state.CurrentQuestionIndex--;
+        else context.state.CurrentQuestionIndex++;
+
+        console.log("Current Index: " + context.state.CurrentQuestionIndex);
+        console.log("Current Question: ");
+        console.log(context.state.SurveyQuestions[context.state.CurrentQuestionIndex]);
+        let currentQuestion = context.state.SurveyQuestions[context.state.CurrentQuestionIndex];
         let currentAnswers = [];
 
-        state.CurrentQuestion = currentQuestion.Question;
+        context.state.CurrentQuestion = currentQuestion.Question;
         let surveyAnswers = currentQuestion.Answers;
 
         // ================================= CHECKBOXES ==================================== //
         if (currentQuestion.Type === "multiple") { 
             // Create answer entry
-            state.Answers[currentQuestion.Question] = [];
-            state.IsCheckboxQuestion = true;
-            state.ShowAlternateQuestion = true;
+            context.state.Answers[currentQuestion.Question] = [];
+            context.state.IsCheckboxQuestion = true;
+            context.state.ShowAlternateQuestion = true;
 
             this.constructCheckboxes(state, surveyAnswers);
         }
         // ================================= BUTTONS ==================================== //
         else if (currentQuestion.Type === "single") {
-            state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
+            context.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
             
             // Create answer entry
-            state.Answers[currentQuestion.Question] = "";
-            state.RadioProps = []
+            context.state.Answers[currentQuestion.Question] = "";
+            context.state.RadioProps = []
 
             for (var i = 0; i < surveyAnswers.length; i++) {
             let answer = surveyAnswers[i]; 
             let option = answer.Answer;
             let followup = answer.Followup;
 
-            state.RadioProps.push({label: option, value: option, answer: answer});
+            context.state.RadioProps.push({label: option, value: option, answer: answer});
             }
 
-            state.ViewArray.push(
+            context.state.ViewArray.push(
             <View style={{marginHorizontal: 20, marginVertical: 5}}>
             <RadioForm
                 buttonColor={'#333333'}
@@ -238,12 +297,12 @@ export const SurveyScreenShared =
                 initial={-1}
                 onPress={(value) => {
                     context.setState({value: value}); 
-                    state.Answers[currentQuestion.Question] = value;
+                    context.state.Answers[currentQuestion.Question] = value;
                     currentAnswers = [];
                     
                     // Insert answer into current answer (to check for followup)
-                    for (var i = 0; i < state.RadioProps.length; i++) {
-                        let prop = state.RadioProps[i];
+                    for (var i = 0; i < context.state.RadioProps.length; i++) {
+                        let prop = context.state.RadioProps[i];
                         if (value == prop.value) {
                         currentAnswers.push(prop.answer);
                         }
@@ -256,61 +315,107 @@ export const SurveyScreenShared =
         }
         // ================================= TEXT ==================================== //
         else if (currentQuestion.Type === "text") {
-            state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
+            context.state.ViewArray.push(<Text style={styles.sectionTitle}>{currentQuestion.Question}</Text>);
             // Create answer entry
-            state.Answers[currentQuestion.Question] = "";
+            context.state.Answers[currentQuestion.Question] = "";
 
-            state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1, height: state.screenHeight / 2.8, textAlignVertical: "top"}} defaultValue="" multiline={true} onChangeText={(text) => state.Answers[currentQuestion.Question] = text} />)
+            context.state.ViewArray.push(<TextInput style={{marginVertical: 5, marginHorizontal: 20, borderColor: "grey", borderWidth: 1, height: state.screenHeight / 2.8, textAlignVertical: "top"}} defaultValue="" multiline={true} onChangeText={(text) => context.state.Answers[currentQuestion.Question] = text} />)
         }
         // ================================= SLIDER ==================================== //
         else if (currentQuestion.Type === "scale") {
-            state.ShowSlider = true;
-            state.ShowAlternateQuestion = true;
+
+            context.state.ShowSlider = true;
+            context.state.ShowAlternateQuestion = true;
             
             // Create answer entry
-            state.Answers[currentQuestion.Question] = "";
+            context.state.Answers[currentQuestion.Question] = "";
             for (var i = 0; i < surveyAnswers.length; i++) {
             let answer = surveyAnswers[i]; 
             let option = answer.Answer;
 
-            if (i == 0) state.sliderMinValue = parseFloat(option);
-            if (i == 1) state.sliderMaxValue = parseFloat(option);
-            if (i == 2) state.sliderStepValue = parseFloat(option);
+            if (i == 0) context.state.sliderMinValue = parseFloat(option);
+            if (i == 1) context.state.sliderMaxValue = parseFloat(option);
+            if (i == 2) context.state.sliderStepValue = parseFloat(option);
             }
-            state.sliderValue = state.sliderMinValue;
-
-            state.sliderText = "Value: " + state.sliderValue.toString();
+            context.state.sliderValue = context.state.sliderMinValue;
+            context.state.sliderText = "Value: " + context.state.sliderValue.toString();
 
         }
-        state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+        else if (currentQuestion.Type === "cas") {
 
+          context.state.ShowCatSlider = true;
+          context.state.ShowAlternateQuestion = true;
+          context.state.CatAnswers = []
+          
+          // Create answer entry
+          context.state.Answers[currentQuestion.Question] = "";
+          for (var i = 0; i < surveyAnswers.length; i++) {
+            let answer = surveyAnswers[i]; 
+            let option = answer.Answer;
 
-            // ================================= LOAD NEXT / BACK BUTTONS ==================================== //
-            // ======================== Last Question, Show Submit Button ========================= //
-        if (state.CurrentQuestionIndex == state.SurveyQuestions.length - 1) {
-            state.ViewArray.push(
-            <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
-                <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: state.screenWidth / 2.2}} onPress={() => this.loadNextQuestion(context, state, true)}/>
-                <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: state.screenWidth / 2.2}} onPress={() => {
-                if(this.checkAndAppendFollowUp(context, currentAnswers)) {
-                    this.loadNextQuestion(context, state);
-                } else {
-                    this.submitData(context);
-                }
-                }} />
-            </View>
-            );
+            context.state.CatAnswers.push(option);
+          }
+
+          context.state.catMinValue = 0;
+          context.state.catMaxValue = context.state.CatAnswers.length - 1;
+
+          context.state.catValue = context.state.catMinValue;
+
         }
+        context.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+
+
+          // ================================= LOAD NEXT / BACK BUTTONS ==================================== //
+          // ======================== Last Question, Show Submit Button ========================= //
+        // if (state.CurrentQuestionIndex == state.SurveyQuestions.length - 1) {
+        //     state.ViewArray.push(
+        //     <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
+        //         <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: state.screenWidth / 2.2}} onPress={() => this.loadNextQuestion(context, state, true)}/>
+        //         <Button large title="Submit" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: state.screenWidth / 2.2}} onPress={() => {
+        //         if(this.checkAndAppendFollowUp(context, currentAnswers)) {
+        //             this.loadNextQuestion(context, state);
+        //         } else {
+        //             this.submitData(context);
+        //         }
+        //         }} />
+        //     </View>
+        //     );
+        // }
         // ======================== First Question, No Back Button ========================= //
-        else if (state.CurrentQuestionIndex == 0) {
-            state.ViewArray.push(
-            <View style={{flex: 1, flexDirection: 'row', justifyContent:'space-between'}}>
-                <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: state.screenWidth / 2.2}} onPress={() => {}}/>
-                <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: state.screenWidth / 2.2}} onPress={() =>
+        if (context.state.CurrentQuestionIndex == 0) {
+            context.state.ViewArray.push(
+            <View style={{flex: 1, flexDirection: 'row', justifyContent:'flex-end'}}>
+                <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: state.screenWidth / 2.2}} onPress={async () =>
                 { 
-                    // append followup question if there are any
-                    this.checkAndAppendFollowUp(context, currentAnswers);
-                    this.loadNextQuestion(context, state)
+
+                  // If theres no next question locally
+                  if ((context.state.CurrentQuestionIndex + 1) === context.state.SurveyQuestions.length)  {
+
+                    let hasFollowup = await this.getFollowupQuestion(context, currentAnswers);
+                    console.log("Has followup question: " + hasFollowup);
+                    if (hasFollowup) {
+                      this.loadNextQuestion(context, context.state);
+                    }
+                    else {
+                      console.log("Looking for next question");
+                      // find next question
+                      let hasNextQuestion = await this.getNextQuestion(context);
+                      console.log("Has next question: " + hasNextQuestion);
+                      if (hasNextQuestion) {
+                        this.loadNextQuestion(context, context.state);
+                      }
+                      else {
+                        this.submitData(context);
+                      }
+                    }
+
+                  }
+                  else {
+
+                    console.log(" ============================= local question exists, using local");
+                    this.loadNextQuestion(context, state);
+
+                  }
                 }
             }/>
             </View>
@@ -321,11 +426,39 @@ export const SurveyScreenShared =
             context.state.ViewArray.push(
             <View style={{flex: 1, flexDirection: 'row', justifyContent:'center'}}>
             <Button large title="Back" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: context.state.screenWidth / 2.2}} onPress={() => this.loadNextQuestion(context, state, true)}/>
-            <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: context.state.screenWidth / 2.2}} onPress={() =>
+            <Button large title="Next" buttonStyle={{marginVertical: 5, marginHorizontal: 5, alignSelf: 'stretch', width: context.state.screenWidth / 2.2}} onPress={async () =>
                 { 
-                    // append followup question if there are any
-                    this.checkAndAppendFollowUp(context,currentAnswers);
-                    this.loadNextQuestion(context, state)
+                  
+                  if ((context.state.CurrentQuestionIndex + 1) === context.state.SurveyQuestions.length)  {
+                  //if (typeof context.state.SurveyQuestions[context.state.CurrentQuestionIndex + 1] === undefined) {
+
+                    let hasFollowup = await this.getFollowupQuestion(context, currentAnswers);
+                    console.log("Has followup question: " + hasFollowup);
+                    if (hasFollowup) {
+                      this.loadNextQuestion(context, context.state);
+                    }
+                    else {
+                      // find next question
+                      console.log("Looking for next question");
+                      let hasNextQuestion = await this.getNextQuestion(context);
+                      console.log("Has next question: " + hasNextQuestion);
+                      if (hasNextQuestion) {
+                        this.loadNextQuestion(context, context.state);
+                      }
+                      else {
+                        console.log("Submitting data...");
+                        this.submitData(context);
+                      }
+                    }
+                  }
+                  else {
+
+                    console.log(" ============================= local question exists, using local");
+                    this.loadNextQuestion(context, state);
+
+                  }
+
+
                 }
             }/>
             </View>
@@ -335,16 +468,120 @@ export const SurveyScreenShared =
         context.forceUpdate();
     },
 
-    checkAndAppendFollowUp: function(context, currentAnswers) {
-      var followUpExists = false;
-      for (var i = 0; i < currentAnswers.length; i++) {
-        var answer = currentAnswers[i];
-        if (answer.Followup != null) {
-          context.state.SurveyQuestions.splice(context.state.CurrentQuestionIndex + 1, 0, answer.Followup);
-          followUpExists = true;
-        }
-      }
+    checkAndAppendFollowUp: async function(context, currentAnswers) {
+      
+      console.log("I AM CHECKING AND APPENDING A FOLLOWUP")
+
+      var followUpExists = await this.getFollowupQuestion(context, currentAnswers);
+
+      console.log("Follow Exists: " + followUpExists);
       return followUpExists;
+
+      
+    },
+
+    getFollowupQuestion: async function(context, currentAnswers) {
+      var i;
+      var followup;
+      console.log("====================================== GOING INTO LOOOOOOOOP =====================================");
+      for (i = 0; i < currentAnswers.length; i++) {
+
+        let answer = currentAnswers[i];
+        console.log("LOOOOOOPING =====================================");
+        console.log(answer);
+        if (answer.FollowUp == null) continue;
+        else { followup = answer; break; }
+
+      }
+
+      if (followup === undefined || followup.FollowUp === undefined) return false;
+
+      let urlstring = 'http://emad-uwa5206.herokuapp.com/getFollowUp/' + 'test' + "/" + followup.FollowUp; // context.state.Username
+      //let urlstring = 'http://192.168.20.9:3000/getFollowUp/' + 'test'  + followup.FollowUp; // context.state.Username
+        console.log("Url Answer Followup: " + urlstring);
+
+      try {
+        let response = await fetch(urlstring);
+        if(response.ok) {
+          let responseJson = await response.json();
+          if (responseJson.msg == "Timer has started") {
+            // thank someone for survey
+            console.log("Timer has started");
+            return false;
+          }
+          // =========== THERE IS A FOLLOWUP FOR NEXT QUESTION
+          else if (responseJson != null) {
+
+            var newQ = this.createQuestion(responseJson);
+            console.log("New Question: " + newQ);
+
+            context.state.SurveyQuestions.splice(context.state.CurrentQuestionIndex + 1, 0, newQ);
+            console.log("Survey Question at current index: " + context.state.SurveyQuestions[context.state.CurrentQuestionIndex]);
+
+            return true;
+          }
+          else {
+            console.log("error occurred in check and append followup")
+            return false;
+          }
+        } else {
+          console.log("HTTP Error" + response.status);
+        }
+      } catch (error) {
+        console.log("THERE WAS ERROR");
+        console.log(error);
+        // ============= on failure ============== //
+        this.state.error = true;
+        this.forceUpdate();
+        throw error;
+      }
+
+    },
+
+    getNextQuestion: async function(context) {
+
+      let data = {
+        method: 'POST',
+      }
+      let urlstring = 'http://emad-uwa5206.herokuapp.com/surveyAPI/' + 'test'; // context.state.Username
+      //let urlstring = 'http://192.168.20.9:3000/surveyAPI/' + 'test'; // context.state.Username
+      console.log("Url Answer Next Question: " + urlstring);
+      try {
+        let response = await fetch(urlstring, data);
+        if(response.ok) {
+          let responseJson = await response.json();
+          if (responseJson.msg == "Timer has started." || responseJson.msg == "You have completed the survey.") {
+            // thank someone for survey
+            console.log("Timer has started");
+            return false;
+          }
+          // =========== THERE IS A NEXT QUESTION
+          else if (responseJson != null) {
+
+            var newQ = this.createQuestion(responseJson);
+            console.log("================================= Next Question: " + newQ);
+
+            context.state.SurveyQuestions.splice(context.state.CurrentQuestionIndex + 1, 0, newQ);
+            console.log("Survey Question at current index: " + context.state.SurveyQuestions[context.state.CurrentQuestionIndex]);
+
+            return true;
+          }
+          else {
+            console.log("error occurred in getNextQuestion")
+            return false;
+          }
+        } else {
+          console.log("HTTP Error" + response.status);
+        }
+      } catch (error) {
+        console.log("THERE WAS ERROR");
+        console.log(error);
+        // ============= on failure ============== //
+        context.state.error = true;
+        context.forceUpdate();
+        throw error;
+      }
+
     },
 
     constructCheckboxes: function(state, answers) {
@@ -411,11 +648,19 @@ export const SurveyScreenShared =
       context.forceUpdate();
     },
 
-    submitData(context) {
+    updateCatSlider(context, value) {
+      context.state.catValue = value; 
+
+      context.state.Answers[context.state.CurrentQuestion] = context.state.CatAnswers[context.state.catValue];
+      context.forceUpdate();
+    },
+
+    submitData : async function (context) {
 
       context.state.IsCheckboxQuestion = false;
       context.state.ShowAlternateQuestion = false;
       context.state.ShowSlider = false;
+      context.state.ShowCatSlider = false;
       context.state.ViewArray = [];
 
       context.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
@@ -427,39 +672,108 @@ export const SurveyScreenShared =
       for (var key in context.state.Answers) {
         var ans = context.state.Answers[key];
 
-        let answer = { stitle: context.state.SurveyTitle, qtitle: key, answer: ans };
+        //let answer = { stitle: context.state.SurveyTitle, qtitle: key, answer: ans };
+        let answer = { "id": context.state.SurveyId, "question": key, "answer": ans };
         result.push(answer);
       }
+
+      console.log(result);
 
       // Post results
       let data = {
         method: 'POST',
         body: JSON.stringify({
             result: result,
-            username: context.state.Username,
+            username: 'test'//context.state.Username,
         }),
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        }
+        // headers: {
+        //     'Accept': 'application/json',
+        //     'Content-Type': 'application/json',
+        // }
       }
       
+      //let urlstring = 'https://emad-uwa5206.herokuapp.com/diaryAPI/' + 'test/' + context.state.SurveyId;
+      let urlstring = 'https://emad-uwa5206.herokuapp.com/diaryAPI/' + 'test/' + context.state.SurveyId;
+      console.log(urlstring);
 
-      fetch('https://emad-cits5206-2.herokuapp.com/projectAPI/' + context.state.Username, data)
+      let response = await fetch(urlstring, data); // context.state.Username
       //fetch('http://192.168.31.244:3000/projectAPI/' + this.state.Username, data)
-      .then((response) => response.json())
-            .then((responseJson) => {
 
-          // ============= on success ============== //
-          // Adjust notification time
-          context.sendNotification(responseJson.interval);
+      if (response.ok) {
 
-        }).catch((error) => {
-          // ============= on failure ============== //
-          alert(error);
-      });
+        let responseJson = await response.json();
+        console.log(responseJson);
+
+      }
+      else {
+        console.log("HTTP Error" + response.status);
+      }
+
+      // .then((response) => response.json())
+      //       .then((responseJson) => {
+
+      //     // ============= on success ============== //
+      //     // Adjust notification time
+      //     console.log("ResponseJson");
+      //     console.log(responseJson);
+      //     //context.sendNotification(responseJson.interval);
+
+      //   }).catch((error) => {
+      //     // ============= on failure ============== //
+      //     console.log(error);
+      //     alert(error);
+      //     throw error;
+      // });
 
       context.forceUpdate();
+    },
+
+    createQuestion(data) {
+
+          var SurveyId = data._id;
+          var SurveyTitle = data.title;
+          var SurveyType = data.type;
+          var SurveyInterval = data.interval;
+          
+          // Create list of answers
+          let answers = [];
+          for (var j = 0; j < data.content.length; j++) {
+            
+            let SQ = data.content[j];
+            let SQid = SQ._id;
+            let SQans = SQ.title;
+            let SQfollowup = SQ.followUp;
+
+            // =======================================
+            let ansObj = {
+              Id: SQid,
+              Answer: SQans,
+              FollowUp: SQfollowup
+            }
+  
+            answers.push(ansObj);
+          }
+  
+          let SurveyQuestion = { 
+            Id: SurveyId,
+            Interval: SurveyInterval,
+            Question: SurveyTitle,
+            Type: SurveyType,
+            Answers: answers
+          };
+
+          console.log(SurveyQuestion);
+          
+          return SurveyQuestion;
+    },
+
+    GetCatSliderOption(context, val) {
+
+      if (context.state.CatAnswers[val] !== undefined)
+        return context.state.CatAnswers[val];
+      else 
+        return "";
+
     },
 
     const : styles = StyleSheet.create({
