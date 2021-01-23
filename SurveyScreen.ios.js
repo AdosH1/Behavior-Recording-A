@@ -11,11 +11,11 @@ import {
     TextInput,
     Dimensions,
     Switch,
-    PushNotificationIOS,
   } from 'react-native';
 import {  Divider, Button, Slider } from 'react-native-elements';
 import RadioForm from 'react-native-simple-radio-button';
 import RNRestart from 'react-native-restart'; 
+import PushNotificationIOS from 'react-native-community/react-native-push-notification-ios';
 
 class SurveyScreen extends React.Component {
     constructor(props) {
@@ -25,7 +25,11 @@ class SurveyScreen extends React.Component {
 
       this.state = SurveyScreenShared.getInitialState(true);
       //this.convertServerDataToSurvey(navigation.getParam('serverData', 'Unable to find server data.'));
+      let serverData = navigation.getParam('serverData', 'Unable to find server data.');
+      this.state.SurveyId = serverData.sId;
+      this.state.SurveyQuestions = SurveyScreenShared.convertServerDataToSurvey(this, serverData.question);
       this.state.Username = navigation.getParam('username', 'Unable to find user data');
+      this.state.Password = navigation.getParam('username', 'Unable to find user data');
       PushNotificationIOS.requestPermissions();
     }
 
@@ -38,7 +42,7 @@ class SurveyScreen extends React.Component {
       SurveyScreenShared.loadNextQuestion(this, this.state);
     }
 
-    sendNotification(seconds) {
+    sendNotification(context, seconds) {
         setTimeout(function() {
             PushNotificationIOS.presentLocalNotification({ alertBody: "A survey is ready to be taken!", alertAction: "view" });
         }, seconds * 1000);

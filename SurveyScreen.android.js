@@ -31,6 +31,7 @@ class SurveyScreen extends React.Component {
       this.state.SurveyId = serverData.sId;
       this.state.SurveyQuestions = SurveyScreenShared.convertServerDataToSurvey(this, serverData.question);
       this.state.Username = navigation.getParam('username', 'Unable to find user data');
+      this.state.Password = navigation.getParam('username', 'Unable to find user data');
       console.log("========================= USERNAME: " + this.state.Username);
     }
 
@@ -43,6 +44,7 @@ class SurveyScreen extends React.Component {
         // (required) Called when a remote or local notification is opened or received
         onNotification: function(notification) {
           RNRestart.Restart();
+          this.props.navigation.push('Survey', {serverData: responseJson, username: this.state.username, password: this.state.password});
           //console.log("NOTIFICATION:", notification);
         },
         // Should the initial notification be popped automatically
@@ -76,7 +78,7 @@ class SurveyScreen extends React.Component {
       SurveyScreenShared.loadNextQuestion(this, this.state);
     }
 
-    sendNotification(seconds) {
+    sendNotification(context, seconds) {
       PushNotification.localNotificationSchedule({
         //... You can use all the options from localNotifications
         message: "A survey is ready to be taken!", // (required)

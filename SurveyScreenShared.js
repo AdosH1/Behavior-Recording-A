@@ -17,11 +17,6 @@ import {
 export const SurveyScreenShared =
 {
 
-    test : function() 
-    {
-        console.log("I'm working");
-    },
-
     getInitialState(useSampleQuestions = false) {
       sampleSurveyQuestions = [];
       if (useSampleQuestions) {
@@ -515,9 +510,9 @@ export const SurveyScreenShared =
 
       if (followup === undefined || followup.FollowUp === undefined) return false;
 
-      //let urlstring = 'http://emad-uwa5206.herokuapp.com/getFollowUp/' + context.state.Username + "/" + followup.FollowUp; 
+      let urlstring = 'http://emad-uwa5206.herokuapp.com/getFollowUp/' + context.state.Username + "/" + followup.FollowUp; 
 
-      let urlstring = 'http://192.168.20.9:3000/getFollowUp/' + context.state.Username + "/" + followup.FollowUp;  
+      //let urlstring = 'http://192.168.20.9:3000/getFollowUp/' + context.state.Username + "/" + followup.FollowUp;  
         console.log("Url Answer Followup: " + urlstring);
 
       try {
@@ -566,8 +561,8 @@ export const SurveyScreenShared =
       let data = {
         method: 'POST',
       }
-      //let urlstring = 'http://emad-uwa5206.herokuapp.com/surveyAPI/' + context.state.Username;
-      let urlstring = 'http://192.168.20.9:3000/surveyAPI/' + context.state.Username;  
+      let urlstring = 'http://emad-uwa5206.herokuapp.com/surveyAPI/' + context.state.Username;
+      //let urlstring = 'http://192.168.20.9:3000/surveyAPI/' + context.state.Username;  
       console.log("Url Answer Next Question: " + urlstring);
       try {
         let response = await fetch(urlstring, data);
@@ -718,8 +713,8 @@ export const SurveyScreenShared =
       let type = "";
       if (msg == "Timer has started.") type = "EOQ";
       if (msg == "You have completed the survey.") type = "EOS";
-      //let urlstring = 'https://emad-uwa5206.herokuapp.com/diaryAPI/' + context.state.Username + "/" + context.state.SurveyId + "/" + type;
-      let urlstring = 'http://192.168.20.9:3000/diaryAPI/' + context.state.Username + "/" + context.state.SurveyId + "/" + type;
+      let urlstring = 'https://emad-uwa5206.herokuapp.com/diaryAPI/' + context.state.Username + "/" + context.state.SurveyId + "/" + type;
+      //let urlstring = 'http://192.168.20.9:3000/diaryAPI/' + context.state.Username + "/" + context.state.SurveyId + "/" + type;
       console.log(urlstring);
 
       let response = await fetch(urlstring, data); 
@@ -730,7 +725,7 @@ export const SurveyScreenShared =
         console.log(responseJson);
 
         if (responseJson.interval !== undefined)
-          context.sendNotification(responseJson.interval);
+          context.sendNotification(context, responseJson.interval);
 
       }
       else {

@@ -12,6 +12,7 @@ import {
     AsyncStorage,
     Switch,
   } from 'react-native';
+import Modal from 'react-native-modal';
 import { withNavigation } from 'react-navigation';
 
 
@@ -27,13 +28,15 @@ class LoginScreen extends React.Component {
       error: false,
       rememberCredentials: true,
       checked: true,
+      showModal: false,
     }
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     // load previous credentials if exists
-    this.loadPreviousCredentials();
-    SurveyScreenShared.test();
+    let hasPrevCred = await this.loadPreviousCredentials();
+    if (hasPrevCred) this.login();
+
   }
 
   async storeCredentials(user) {
@@ -63,15 +66,20 @@ class LoginScreen extends React.Component {
     } catch (error) {
       console.log("Something went wrong", error);
     }
+
     this.forceUpdate();
+
+    if (this.state.username != "" && this.state.password != "")
+      return true;
+    return false;
+    
   }
 
 
   login() {
 
-    //var obj = {};
-    //this.props.navigation.push('Survey', {serverData: obj, username: "ados"});
-    //return;
+    this.state.showModal = true;
+    this.forceUpdate();
 
     // User data query
     let data = {
@@ -87,9 +95,11 @@ class LoginScreen extends React.Component {
     }
 
     console.log(data);
+
+
     // ========================= Get server data ========================== //
-    fetch('http://192.168.20.9:3000/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
-    //fetch('https://emad-uwa5206.herokuapp.com/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
+    //fetch('http://192.168.20.9:3000/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
+    fetch('https://emad-uwa5206.herokuapp.com/user-login', data) // https://emad-cits5206-2.herokuapp.com/user-login
       .then((response) => response.json())
         .then((responseJson) => {
 
@@ -106,13 +116,17 @@ class LoginScreen extends React.Component {
             this.storeCredentials(user);
           }
 
+          this.state.showModal = false;
+          this.forceUpdate();
+
           // Go to next screen with data
           console.log(responseJson);
-          this.props.navigation.push('Survey', {serverData: responseJson, username: this.state.username});
+          this.props.navigation.push('Survey', {serverData: responseJson, username: this.state.username, password: this.state.password});
 
         }).catch((error) => {
         // ============= on failure ============== //
         this.state.error = true;
+        this.state.showModal = false;
         this.forceUpdate();
 
         console.error(error);
@@ -135,28 +149,42 @@ class LoginScreen extends React.Component {
   
                 <Image source={{uri: 'https://www.courseseeker.edu.au/assets/images/institutions/1055.png'}} style={{width: 330, height: 110,  margin: 5,}} />
   
-                <View style={{ height: 50, }}></View>
-                <View style={styles.body}>
-                  <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>Login</Text>
-                    <Text>Username: </Text>
-                    <TextInput
-                      style={styles.userInput}
-                      placeholder="Enter username here." 
-                      onChangeText={(value) => { this.state.username = value; }} defaultValue={this.state.username}/>
-                    <Text>Password: </Text>
-                    <TextInput
-                      style={styles.userInput}
-                      secureTextEntry={true}
-                      placeholder="Enter password here." onChangeText={(value) => { this.state.password = value; }} defaultValue={this.state.password}/>
-                      {this.state.error? <Text style={styles.errorMsg}>Incorrect username or password.</Text> : null}
-                    <View style={styles.rememberMeSwitch}>
-                      <Switch onValueChange={(value) => { this.state.rememberCredentials = value; this.forceUpdate(); }} value={this.state.rememberCredentials}/>
-                      <Text>Remember Me</Text>
+                <View>
+                  <View style={{ height: 50, }}></View>
+                  <View style={styles.body}>
+                    <View style={styles.sectionContainer}>
+                      <Text style={styles.sectionTitle}>Login</Text>
+                      <Text>Username: </Text>
+                      <TextInput
+                        style={styles.userInput}
+                        placeholder="Enter username here." 
+                        onChangeText={(value) => { this.state.username = value; }} defaultValue={this.state.username}/>
+                      <Text>Password: </Text>
+                      <TextInput
+                        style={styles.userInput}
+                        secureTextEntry={true}
+                        placeholder="Enter password here." onChangeText={(value) => { this.state.password = value; }} defaultValue={this.state.password}/>
+                        {this.state.error? <Text style={styles.errorMsg}>Incorrect username or password.</Text> : null}
+                      <View style={styles.rememberMeSwitch}>
+                        <Switch onValueChange={(value) => { this.state.rememberCredentials = value; this.forceUpdate(); }} value={this.state.rememberCredentials}/>
+                        <Text>Remember Me</Text>
+                      </View>
+                      <Button style={{height: 40, marginVertical: 10,}} onPress={() => { this.login(); }} title="Login" />
                     </View>
-                    <Button style={{height: 40, marginVertical: 10,}} onPress={() => { this.login(); }} title="Login" />
-                  </View>
+                  </View> 
                 </View>
+
+                {/* { this.state.showModal ? */}
+                <View>
+                  <Modal isVisible={this.state.showModal}>
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                      <View style={{backgroundColor: '#FFF', width: 330, height: 110, justifyContent: 'center', alignItems: 'center' }}>
+                        <Text>Logging in...</Text>
+                      </View>
+                      
+                    </View>
+                  </Modal>
+                </View> 
   
             </View>
           </ScrollView>
