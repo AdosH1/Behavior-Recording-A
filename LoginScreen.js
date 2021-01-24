@@ -9,11 +9,11 @@ import {
     Image,
     TextInput,
     Button,
-    AsyncStorage,
     Switch,
   } from 'react-native';
 import Modal from 'react-native-modal';
 import { withNavigation } from 'react-navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
