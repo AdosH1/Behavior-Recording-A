@@ -28,6 +28,11 @@ class SurveyScreen extends React.Component {
 
       this.state = SurveyScreenShared.getInitialState(false);
       let serverData = navigation.getParam('serverData', 'Unable to find server data.');
+
+      if (!SurveyScreenShared.CheckServerData(this, serverData)) {
+        return;
+      }
+
       this.state.SurveyId = serverData.sId;
       this.state.SurveyQuestions = SurveyScreenShared.convertServerDataToSurvey(this, serverData.question);
       this.state.Username = navigation.getParam('username', 'Unable to find user data');

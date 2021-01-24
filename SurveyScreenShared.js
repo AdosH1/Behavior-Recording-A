@@ -799,6 +799,36 @@ export const SurveyScreenShared =
 
     },
 
+    CheckServerData(context, serverData) {
+      console.log(serverData);
+      if (serverData === null || serverData === undefined) {
+        context.state.ViewArray = [];
+
+        context.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+        context.state.ViewArray.push(<Text style={styles.sectionTitle}>An error has occured.</Text>);
+        context.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+        return false;
+      }
+      else if (serverData.err === "It's not time yet.") {
+        context.state.ViewArray = [];
+
+        context.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+        context.state.ViewArray.push(<Text style={styles.sectionTitle}>There is currently no survey available for you.</Text>);
+        context.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+        return false;
+      }
+      else if (serverData.err === "No Survey Assigned") {
+        context.state.ViewArray = [];
+
+        context.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+        context.state.ViewArray.push(<Text style={styles.sectionTitle}>There is currently no survey assigned to you.</Text>);
+        context.state.ViewArray.push(<Divider style={{ backgroundColor: 'grey', marginVertical: 30, marginHorizontal: 25 }} />);
+        return false;
+      }
+
+      return true;
+    },
+
     const : styles = StyleSheet.create({
         scrollView: {
           backgroundColor: '#FFF',
